@@ -1,5 +1,4 @@
 import Foundation
-import SwiftUI
 
 class GameViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -228,9 +227,6 @@ class GameViewModel: ObservableObject {
             // Проверяем, содержит ли атакованная коробка цыпленка противника
             let hitOpponent = self.aiBoxes[targetRow][targetColumn].containsPlayer == .ai
             
-            // Сохраняем текущего игрока перед сбросом (важно для обновления UI)
-            let playerWasHit = hitOpponent
-            
             if hitOpponent {
                 // Если попали по цыпленку, возвращаем его на начальную позицию
                 // Это также очистит containsPlayer в текущей коробке
@@ -305,9 +301,6 @@ class GameViewModel: ObservableObject {
             
             // Проверяем, содержит ли атакованная коробка цыпленка игрока
             let hitPlayer = self.humanBoxes[targetRow][targetColumn].containsPlayer == .human
-            
-            // Сохраняем результат попадания
-            let playerWasHit = hitPlayer
             
             if hitPlayer {
                 // Если попали по цыпленку, возвращаем его на начальную позицию
@@ -529,11 +522,8 @@ class GameViewModel: ObservableObject {
         currentPhase = .gameOver
         showVictoryOverlay = true
         
-        // Добавляем очки и разблокируем следующий уровень
-        appState.addScore(points: 100)
-        if currentLevel.id < 10 {
-            appState.unlockNextLevel()
-        }
+        // Отмечаем уровень как пройденный и разблокируем следующий
+        appState.completeLevel(levelId: currentLevel.id)
     }
     
     // Обработка победы AI

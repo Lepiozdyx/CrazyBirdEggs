@@ -25,7 +25,9 @@ struct LevelSelectionView: View {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(1...10, id: \.self) { level in
                             NavigationLink(destination: GameView(levelId: level, appState: appState)) {
-                                LevelCell(level: level, isUnlocked: level <= appState.unlockedLevels)
+                                LevelCell(level: level,
+                                          isUnlocked: level <= appState.unlockedLevels,
+                                          isCompleted: appState.isLevelCompleted(levelId: level))
                             }
                             .disabled(level > appState.unlockedLevels)
                         }
@@ -60,6 +62,7 @@ struct LevelSelectionView: View {
 struct LevelCell: View {
     let level: Int
     let isUnlocked: Bool
+    let isCompleted: Bool
     
     var body: some View {
         VStack {
@@ -69,13 +72,21 @@ struct LevelCell: View {
             
             ZStack {
                 Circle()
-                    .fill(isUnlocked ? Color.blue : Color.gray.opacity(0.5))
+                    .fill(backgroundColor)
                     .frame(width: 80, height: 80)
                 
                 Text("\(level)")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
+                
+                // Значок завершения для пройденных уровней
+                if isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.white)
+                        .offset(x: 25, y: -25)
+                }
             }
             
             if !isUnlocked {
@@ -91,6 +102,17 @@ struct LevelCell: View {
                 .shadow(radius: isUnlocked ? 3 : 1)
         )
         .opacity(isUnlocked ? 1 : 0.7)
+    }
+    
+    // Цвет фона в зависимости от статуса уровня
+    private var backgroundColor: Color {
+        if !isUnlocked {
+            return Color.gray.opacity(0.5)
+        } else if isCompleted {
+            return Color.green
+        } else {
+            return Color.blue
+        }
     }
 }
 
