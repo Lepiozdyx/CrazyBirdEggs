@@ -162,17 +162,35 @@ class GameViewModel: ObservableObject {
     
     // Ход AI в фазе размещения
     private func makeAIPlacementMove() {
-        guard aiActionIndex < currentLevel.aiActions.count, currentPhase == .placement else {
+        guard currentPhase == .placement else {
             return
         }
         
-        let action = currentLevel.aiActions[aiActionIndex]
-        let row = aiPlayer.currentRow
-        let column = min(action.placementColumn, aiBoxes[row].count - 1)
+        // Проверяем, не вышли ли мы за пределы рядов
+        guard aiPlayer.currentRow < aiBoxes.count else {
+            // Если AI достиг конца, он выиграл
+            handleAIWin()
+            return
+        }
         
-        // Размещаем цыпленка AI
-        aiBoxes[row][column].containsPlayer = .ai
-        aiPlayer.currentColumn = column
+        // Если у нас закончились заготовленные ходы AI, генерируем случайный
+        if aiActionIndex >= currentLevel.aiActions.count {
+            let row = aiPlayer.currentRow
+            let maxCol = aiBoxes[row].count - 1
+            let column = Int.random(in: 0...maxCol)
+            
+            // Размещаем цыпленка AI
+            aiBoxes[row][column].containsPlayer = .ai
+            aiPlayer.currentColumn = column
+        } else {
+            let action = currentLevel.aiActions[aiActionIndex]
+            let row = aiPlayer.currentRow
+            let column = min(action.placementColumn, aiBoxes[row].count - 1)
+            
+            // Размещаем цыпленка AI
+            aiBoxes[row][column].containsPlayer = .ai
+            aiPlayer.currentColumn = column
+        }
         
         // Переходим к фазе атаки
         currentPhase = .attack
@@ -182,6 +200,12 @@ class GameViewModel: ObservableObject {
     
     // Атака на коробку AI
     private func attackAIBox(targetRow: Int, targetColumn: Int) {
+        // Проверяем валидность индексов
+        guard targetRow < aiBoxes.count && targetColumn < aiBoxes[targetRow].count else {
+            print("Invalid attack indices: row \(targetRow), column \(targetColumn)")
+            return
+        }
+        
         animationInProgress = true
         
         // Начинаем анимацию броска яйца
@@ -228,13 +252,36 @@ class GameViewModel: ObservableObject {
     // Ход AI в фазе атаки
     private func makeAIAttackMove() {
         guard aiActionIndex < currentLevel.aiActions.count else {
+            // Если у нас закончились заготовленные ходы AI, генерируем случайный
+            let targetRow = humanPlayer.currentRow
+            guard targetRow < humanBoxes.count else {
+                print("Invalid AI attack row: \(targetRow)")
+                moveToNextTurn()
+                return
+            }
+            
+            let maxCol = humanBoxes[targetRow].count - 1
+            let targetColumn = Int.random(in: 0...maxCol)
+            performAIAttack(targetRow: targetRow, targetColumn: targetColumn)
             return
         }
         
         let action = currentLevel.aiActions[aiActionIndex]
         let targetRow = humanPlayer.currentRow
-        let targetColumn = min(action.attackColumn, humanBoxes[targetRow].count - 1)
         
+        // Проверка валидности индексов
+        guard targetRow < humanBoxes.count else {
+            print("Invalid AI attack row: \(targetRow)")
+            moveToNextTurn()
+            return
+        }
+        
+        let targetColumn = min(action.attackColumn, humanBoxes[targetRow].count - 1)
+        performAIAttack(targetRow: targetRow, targetColumn: targetColumn)
+    }
+    
+    // Выполнение атаки AI
+    private func performAIAttack(targetRow: Int, targetColumn: Int) {
         // Показываем анимацию атаки AI
         gameMessage = "AI атакует!"
         
@@ -304,40 +351,21 @@ class GameViewModel: ObservableObject {
     private func moveToNextTurn() {
         animationInProgress = false
         
-        // Проверяем условие победы (достиг ли кто-то центральной арены)
-        if humanPlayer.currentRow == 4 {
-            handleHumanWin()
-            return
-        }
-        
-        if aiPlayer.currentRow == 4 {
-            handleAIWin()
-            return
-        }
-        
-        // Если оба игрока не были сбиты, они оба перемещаются вперед
-        if humanPlayer.currentColumn != nil && aiPlayer.currentColumn != nil {
-            movePlayersToNextRow()
-            return
-        }
-        
-        // Если один из игроков был сбит, а другой нет, сбитый игрок начинает с начала,
-        // а другой продвигается вперед
-        
         // Если AI был сбит, а человек нет
         if aiPlayer.currentColumn == nil && humanPlayer.currentColumn != nil {
             // Перемещаем человека на следующий ряд
             moveHumanPlayerToNextRow()
             
-            // Переходим к фазе размещения для AI
-            currentPhase = .placement
-            currentTurn = .ai
-            gameMessage = "AI размещает цыпленка"
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                guard let self = self else { return }
-                self.makeAIPlacementMove()
+            // Проверяем, не достиг ли человек центральной арены
+            if humanPlayer.currentRow >= 4 {
+                handleHumanWin()
+                return
             }
+            
+            // Переходим к фазе размещения для человека (сначала размещение, затем атака)
+            currentPhase = .placement
+            currentTurn = .human
+            gameMessage = "Выберите коробку для размещения"
             return
         }
         
@@ -346,10 +374,34 @@ class GameViewModel: ObservableObject {
             // Перемещаем AI на следующий ряд
             moveAIPlayerToNextRow()
             
+            // Проверяем, не достиг ли AI центральной арены
+            if aiPlayer.currentRow >= 4 {
+                handleAIWin()
+                return
+            }
+            
             // Переходим к фазе размещения для человека
             currentPhase = .placement
             currentTurn = .human
             gameMessage = "Выберите коробку для размещения"
+            return
+        }
+        
+        // Если оба игрока не были сбиты, они оба перемещаются вперед
+        if humanPlayer.currentColumn != nil && aiPlayer.currentColumn != nil {
+            movePlayersToNextRow()
+            
+            // Проверяем условие победы после перемещения
+            if humanPlayer.currentRow >= 4 {
+                handleHumanWin()
+                return
+            }
+            
+            if aiPlayer.currentRow >= 4 {
+                handleAIWin()
+                return
+            }
+            
             return
         }
         
@@ -363,7 +415,9 @@ class GameViewModel: ObservableObject {
     private func moveHumanPlayerToNextRow() {
         // Очищаем текущую позицию
         if let column = humanPlayer.currentColumn {
-            humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
+            if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
+                humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
+            }
         }
         
         // Увеличиваем индекс ряда
@@ -377,7 +431,9 @@ class GameViewModel: ObservableObject {
     private func moveAIPlayerToNextRow() {
         // Очищаем текущую позицию
         if let column = aiPlayer.currentColumn {
-            aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
+            if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
+                aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
+            }
         }
         
         // Увеличиваем индекс ряда
@@ -391,16 +447,31 @@ class GameViewModel: ObservableObject {
     private func movePlayersToNextRow() {
         // Очищаем текущие позиции
         if let column = humanPlayer.currentColumn {
-            humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
+            if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
+                humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
+            }
         }
         
         if let column = aiPlayer.currentColumn {
-            aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
+            if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
+                aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
+            }
         }
         
         // Увеличиваем индекс ряда
         humanPlayer.currentRow += 1
         aiPlayer.currentRow += 1
+        
+        // Проверяем, не выиграл ли кто-то (достиг центральной арены)
+        if humanPlayer.currentRow >= 4 {
+            handleHumanWin()
+            return
+        }
+        
+        if aiPlayer.currentRow >= 4 {
+            handleAIWin()
+            return
+        }
         
         // Сбрасываем колонки
         humanPlayer.currentColumn = nil
