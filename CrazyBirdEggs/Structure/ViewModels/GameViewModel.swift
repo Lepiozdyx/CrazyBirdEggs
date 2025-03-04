@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 class GameViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -227,8 +228,12 @@ class GameViewModel: ObservableObject {
             // Проверяем, содержит ли атакованная коробка цыпленка противника
             let hitOpponent = self.aiBoxes[targetRow][targetColumn].containsPlayer == .ai
             
+            // Сохраняем текущего игрока перед сбросом (важно для обновления UI)
+            let playerWasHit = hitOpponent
+            
             if hitOpponent {
                 // Если попали по цыпленку, возвращаем его на начальную позицию
+                // Это также очистит containsPlayer в текущей коробке
                 self.resetPlayerPosition(player: .ai)
                 self.gameMessage = "Вы сбили цыпленка противника!"
             } else {
@@ -301,8 +306,12 @@ class GameViewModel: ObservableObject {
             // Проверяем, содержит ли атакованная коробка цыпленка игрока
             let hitPlayer = self.humanBoxes[targetRow][targetColumn].containsPlayer == .human
             
+            // Сохраняем результат попадания
+            let playerWasHit = hitPlayer
+            
             if hitPlayer {
                 // Если попали по цыпленку, возвращаем его на начальную позицию
+                // Это также очистит containsPlayer в текущей коробке
                 self.resetPlayerPosition(player: .human)
                 self.gameMessage = "AI сбил вашего цыпленка!"
             } else {
@@ -326,6 +335,7 @@ class GameViewModel: ObservableObject {
             // Находим текущую коробку и очищаем ее
             if let column = humanPlayer.currentColumn {
                 if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
+                    // Важно! Очищаем информацию о наличии игрока в коробке
                     humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
                 }
             }
@@ -337,6 +347,7 @@ class GameViewModel: ObservableObject {
             // Находим текущую коробку AI и очищаем ее
             if let column = aiPlayer.currentColumn {
                 if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
+                    // Важно! Очищаем информацию о наличии AI в коробке
                     aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
                 }
             }
@@ -362,6 +373,9 @@ class GameViewModel: ObservableObject {
                 return
             }
             
+            // Сбрасываем состояние разрушения для всех ячеек
+            resetDestroyedState()
+            
             // Переходим к фазе размещения для человека (сначала размещение, затем атака)
             currentPhase = .placement
             currentTurn = .human
@@ -379,6 +393,9 @@ class GameViewModel: ObservableObject {
                 handleAIWin()
                 return
             }
+            
+            // Сбрасываем состояние разрушения для всех ячеек
+            resetDestroyedState()
             
             // Переходим к фазе размещения для человека
             currentPhase = .placement
@@ -406,6 +423,7 @@ class GameViewModel: ObservableObject {
         }
         
         // Если оба были сбиты (маловероятный сценарий, но на всякий случай)
+        resetDestroyedState()
         currentPhase = .placement
         currentTurn = .human
         gameMessage = "Выберите коробку для размещения"
@@ -441,6 +459,23 @@ class GameViewModel: ObservableObject {
         
         // Сбрасываем колонку
         aiPlayer.currentColumn = nil
+    }
+    
+    // Сброс состояния разрушения для всех ячеек
+    private func resetDestroyedState() {
+        // Сбрасываем состояние разрушения для коробок человека
+        for i in 0..<humanBoxes.count {
+            for j in 0..<humanBoxes[i].count {
+                humanBoxes[i][j].isDestroyed = false
+            }
+        }
+        
+        // Сбрасываем состояние разрушения для коробок AI
+        for i in 0..<aiBoxes.count {
+            for j in 0..<aiBoxes[i].count {
+                aiBoxes[i][j].isDestroyed = false
+            }
+        }
     }
     
     // Перемещение игроков на следующий ряд
@@ -480,6 +515,9 @@ class GameViewModel: ObservableObject {
         // Увеличиваем индекс действий AI
         aiActionIndex += 1
         
+        // Сбрасываем состояние разрушения для всех ячеек
+        resetDestroyedState()
+        
         // Переходим к фазе размещения
         currentPhase = .placement
         currentTurn = .human
@@ -517,6 +555,9 @@ class GameViewModel: ObservableObject {
         
         // Пересоздаем игровое поле
         createBoxes()
+        
+        // Сбрасываем состояние разрушения для всех ячеек (на всякий случай)
+        resetDestroyedState()
     }
     
     // Проверка, нужно ли подсвечивать ряд human коробок
