@@ -59,9 +59,7 @@ struct MainMenuView: View {
             }
             .navigationBarHidden(true)
             .onAppear {
-                // Проверяем ориентацию устройства
                 if UIDevice.current.orientation.isPortrait {
-                    // Показываем предупреждение о необходимости горизонтальной ориентации
                     showOrientationWarning()
                 }
             }

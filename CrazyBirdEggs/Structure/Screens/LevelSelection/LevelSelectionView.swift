@@ -9,55 +9,53 @@ struct LevelSelectionView: View {
     ]
     
     var body: some View {
-        ZStack {
-            // Фон
-            Color.gray.opacity(0.2).ignoresSafeArea()
-            
-            VStack {
-                // Заголовок
-                HStack(alignment: .top) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Text("Назад")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(width: 80, height: 40)
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                    }
-                    
-                    Spacer()
-                    Text("Выберите уровень")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .padding(.top)
+        OrientationRestrictedView(requiredOrientation: .landscape, restrictionMessage: "Use landscape orientation for better experience") {
+            ZStack {
+                // Фон
+                Color.gray.opacity(0.2).ignoresSafeArea()
                 
-                // Сетка уровней
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 20) {
-                        ForEach(1...10, id: \.self) { level in
-                            NavigationLink(
-                                destination: GameView(levelId: level, appState: appState))
-                            {
-                                LevelCell(level: level,
-                                          isUnlocked: level <= appState.unlockedLevels,
-                                          isCompleted: appState.isLevelCompleted(levelId: level))
-                            }
-                            .disabled(level > appState.unlockedLevels)
+                VStack {
+                    // Заголовок
+                    HStack(alignment: .top) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Text("Назад")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 80, height: 40)
+                                .background(Color.blue)
+                                .cornerRadius(10)
                         }
+                        
+                        Spacer()
+                        Text("Выберите уровень")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                        Spacer()
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    // Сетка уровней
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 20) {
+                            ForEach(1...10, id: \.self) { level in
+                                NavigationLink(
+                                    destination: GameView(levelId: level, appState: appState))
+                                {
+                                    LevelCell(level: level,
+                                              isUnlocked: level <= appState.unlockedLevels,
+                                              isCompleted: appState.isLevelCompleted(levelId: level))
+                                }
+                                .disabled(level > appState.unlockedLevels)
+                            }
+                        }
+                        .padding()
+                    }
                 }
             }
-        }
-        .navigationBarHidden(true)
-        .onAppear {
-            // Устанавливаем предпочтительную ориентацию для данного экрана
-            AppDelegate.orientationLock = .landscape
+            .navigationBarHidden(true)
         }
     }
 }
