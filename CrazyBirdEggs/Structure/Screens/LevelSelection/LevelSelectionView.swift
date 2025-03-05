@@ -2,7 +2,7 @@ import SwiftUI
 
 struct LevelSelectionView: View {
     @ObservedObject var appState: AppState
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss
     
     let columns = [
         GridItem(.adaptive(minimum: 120), spacing: 20)
@@ -15,16 +15,34 @@ struct LevelSelectionView: View {
             
             VStack {
                 // Заголовок
-                Text("Выберите уровень")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding(.top)
+                HStack(alignment: .top) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Назад")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(width: 80, height: 40)
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                    }
+                    
+                    Spacer()
+                    Text("Выберите уровень")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.top)
                 
                 // Сетка уровней
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 20) {
                         ForEach(1...10, id: \.self) { level in
-                            NavigationLink(destination: GameView(levelId: level, appState: appState)) {
+                            NavigationLink(
+                                destination: GameView(levelId: level, appState: appState))
+                            {
                                 LevelCell(level: level,
                                           isUnlocked: level <= appState.unlockedLevels,
                                           isCompleted: appState.isLevelCompleted(levelId: level))
@@ -34,20 +52,6 @@ struct LevelSelectionView: View {
                     }
                     .padding()
                 }
-                
-                // Кнопка "Назад"
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Text("Назад")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(width: 120, height: 40)
-                        .background(Color.blue)
-                        .cornerRadius(10)
-                        .shadow(radius: 2)
-                }
-                .padding(.bottom)
             }
         }
         .navigationBarHidden(true)
@@ -80,19 +84,19 @@ struct LevelCell: View {
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                 
-                // Значок завершения для пройденных уровней
                 if isCompleted {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 24))
                         .foregroundColor(.white)
                         .offset(x: 25, y: -25)
                 }
-            }
-            
-            if !isUnlocked {
-                Image(systemName: "lock.fill")
-                    .foregroundColor(.gray)
-                    .padding(.top, 5)
+                
+                if !isUnlocked {
+                    Image(systemName: "lock.fill")
+                        .foregroundColor(.gray)
+                        .padding(.top, 5)
+                        .offset(x: 25, y: -25)
+                }
             }
         }
         .padding()

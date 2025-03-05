@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GameView: View {
     @StateObject var viewModel: GameViewModel
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss
     @State private var showPauseOverlay: Bool = false
     
     init(levelId: Int, appState: AppState) {
@@ -20,14 +20,13 @@ struct GameView: View {
                     // Верхняя панель
                     HStack {
                         // Кнопка паузы
-                        Button(action: {
+                        Button {
                             showPauseOverlay = true
-                        }) {
+                        } label: {
                             Image(systemName: "pause.circle.fill")
                                 .font(.largeTitle)
                                 .foregroundColor(.blue)
                         }
-                        .padding(.leading)
                         
                         Spacer()
                         
@@ -42,15 +41,14 @@ struct GameView: View {
                         Text("Уровень \(viewModel.currentLevel.id)")
                             .font(.headline)
                             .foregroundColor(.primary)
-                            .padding(.trailing)
                     }
-                    .padding(.vertical, 10)
+                    .padding()
                     .background(Color.white.opacity(0.7))
                     
                     Spacer()
                     
-                    // Игровое поле с двумя пирамидами коробок
-                    HStack(spacing: 50) {
+                    // Игровое поле с двумя пирамидами коробок и центральной ареной
+                    HStack(spacing: 10) {
                         // Пирамида для человека (слева)
                         HumanBoardView(
                             viewModel: viewModel,
@@ -67,7 +65,6 @@ struct GameView: View {
                             geometry: geometry
                         )
                     }
-                    .padding(.horizontal)
                     
                     Spacer()
                 }
@@ -86,8 +83,7 @@ struct GameView: View {
                 // Оверлеи
                 if showPauseOverlay {
                     PauseOverlayView(isPresented: $showPauseOverlay) {
-                        // Действие для возврата в меню
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     }
                 }
                 
@@ -102,11 +98,11 @@ struct GameView: View {
                                 viewModel.showVictoryOverlay = false
                             } else {
                                 // Если это последний уровень, возвращаемся в меню
-                                presentationMode.wrappedValue.dismiss()
+                                dismiss()
                             }
                         },
                         onBackToMenu: {
-                            presentationMode.wrappedValue.dismiss()
+                            dismiss()
                         }
                     )
                 }
@@ -117,7 +113,7 @@ struct GameView: View {
                             viewModel.restartLevel()
                         },
                         onBackToMenu: {
-                            presentationMode.wrappedValue.dismiss()
+                            dismiss()
                         }
                     )
                 }
@@ -125,7 +121,6 @@ struct GameView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
-            // Устанавливаем ориентацию
             AppDelegate.orientationLock = .landscape
         }
     }
@@ -147,68 +142,154 @@ struct CentralArenaView: View {
     }
 }
 
-// Игровое поле для человека (левая пирамида)
+// Игровое поле для человека (левая пирамида, вершиной вправо к арене)
 struct HumanBoardView: View {
     @ObservedObject var viewModel: GameViewModel
     let geometry: GeometryProxy
     
     var body: some View {
-        VStack(spacing: 15) {
-            // Отображаем ряды коробок от 0 до 3 (4 ряда)
-            ForEach((0...3).reversed(), id: \.self) { rowIndex in
-                HStack(spacing: 10) {
-                    ForEach(0..<viewModel.humanBoxes[rowIndex].count, id: \.self) { colIndex in
-                        BoxView(
-                            box: viewModel.humanBoxes[rowIndex][colIndex],
-                            isHighlighted: viewModel.shouldHighlightHumanRow(row: rowIndex),
-                            showPlayer: true,
-                            onTap: {
-                                viewModel.handleHumanBoxTap(row: rowIndex, column: colIndex)
-                            }
-                        )
-                        .frame(width: boxSize(rowIndex: rowIndex), height: boxSize(rowIndex: rowIndex))
-                    }
+        HStack(alignment: .center, spacing: 10) {
+            // Ряд 0 (5 коробок)
+            VStack(spacing: 10) {
+                ForEach(0..<5) { colIndex in
+                    BoxView(
+                        box: viewModel.humanBoxes[0][colIndex],
+                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 0),
+                        showPlayer: true,
+                        onTap: {
+                            viewModel.handleHumanBoxTap(row: 0, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 5), height: boxSize(rowCount: 5))
+                }
+            }
+            
+            // Ряд 1 (4 коробки)
+            VStack(spacing: 10) {
+                ForEach(0..<4) { colIndex in
+                    BoxView(
+                        box: viewModel.humanBoxes[1][colIndex],
+                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 1),
+                        showPlayer: true,
+                        onTap: {
+                            viewModel.handleHumanBoxTap(row: 1, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 4), height: boxSize(rowCount: 4))
+                }
+            }
+            
+            // Ряд 2 (3 коробки)
+            VStack(spacing: 10) {
+                ForEach(0..<3) { colIndex in
+                    BoxView(
+                        box: viewModel.humanBoxes[2][colIndex],
+                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 2),
+                        showPlayer: true,
+                        onTap: {
+                            viewModel.handleHumanBoxTap(row: 2, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 3), height: boxSize(rowCount: 3))
+                }
+            }
+            
+            // Ряд 3 (2 коробки)
+            VStack(spacing: 10) {
+                ForEach(0..<2) { colIndex in
+                    BoxView(
+                        box: viewModel.humanBoxes[3][colIndex],
+                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 3),
+                        showPlayer: true,
+                        onTap: {
+                            viewModel.handleHumanBoxTap(row: 3, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 2), height: boxSize(rowCount: 2))
                 }
             }
         }
     }
     
-    // Определяет размер коробки в зависимости от ряда
-    private func boxSize(rowIndex: Int) -> CGFloat {
+    // Определяет размер коробки в зависимости от количества коробок в ряду
+    private func boxSize(rowCount: Int) -> CGFloat {
         let baseSize = min(geometry.size.width / 10, geometry.size.height / 10)
         return baseSize
     }
 }
 
-// Игровое поле для AI (правая пирамида)
+// Игровое поле для AI (правая пирамида, вершиной влево к арене)
 struct AIBoardView: View {
     @ObservedObject var viewModel: GameViewModel
     let geometry: GeometryProxy
     
     var body: some View {
-        VStack(spacing: 15) {
-            // Отображаем ряды коробок от 0 до 3 (4 ряда)
-            ForEach((0...3).reversed(), id: \.self) { rowIndex in
-                HStack(spacing: 10) {
-                    ForEach(0..<viewModel.aiBoxes[rowIndex].count, id: \.self) { colIndex in
-                        BoxView(
-                            box: viewModel.aiBoxes[rowIndex][colIndex],
-                            isHighlighted: viewModel.shouldHighlightAIRow(row: rowIndex),
-                            // Игроку не видно, где находится цыпленок AI, пока по нему не попадут
-                            showPlayer: viewModel.aiBoxes[rowIndex][colIndex].isDestroyed,
-                            onTap: {
-                                viewModel.handleAIBoxTap(row: rowIndex, column: colIndex)
-                            }
-                        )
-                        .frame(width: boxSize(rowIndex: rowIndex), height: boxSize(rowIndex: rowIndex))
-                    }
+        HStack(alignment: .center, spacing: 10) {
+            // Ряд 3 (2 коробки)
+            VStack(spacing: 10) {
+                ForEach(0..<2) { colIndex in
+                    BoxView(
+                        box: viewModel.aiBoxes[3][colIndex],
+                        isHighlighted: viewModel.shouldHighlightAIRow(row: 3),
+                        // Игроку не видно, где находится цыпленок AI, пока по нему не попадут
+                        showPlayer: viewModel.aiBoxes[3][colIndex].isDestroyed,
+                        onTap: {
+                            viewModel.handleAIBoxTap(row: 3, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 2), height: boxSize(rowCount: 2))
+                }
+            }
+            
+            // Ряд 2 (3 коробки)
+            VStack(spacing: 10) {
+                ForEach(0..<3) { colIndex in
+                    BoxView(
+                        box: viewModel.aiBoxes[2][colIndex],
+                        isHighlighted: viewModel.shouldHighlightAIRow(row: 2),
+                        showPlayer: viewModel.aiBoxes[2][colIndex].isDestroyed,
+                        onTap: {
+                            viewModel.handleAIBoxTap(row: 2, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 3), height: boxSize(rowCount: 3))
+                }
+            }
+            
+            // Ряд 1 (4 коробки)
+            VStack(spacing: 10) {
+                ForEach(0..<4) { colIndex in
+                    BoxView(
+                        box: viewModel.aiBoxes[1][colIndex],
+                        isHighlighted: viewModel.shouldHighlightAIRow(row: 1),
+                        showPlayer: viewModel.aiBoxes[1][colIndex].isDestroyed,
+                        onTap: {
+                            viewModel.handleAIBoxTap(row: 1, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 4), height: boxSize(rowCount: 4))
+                }
+            }
+            
+            // Ряд 0 (5 коробок)
+            VStack(spacing: 10) {
+                ForEach(0..<5) { colIndex in
+                    BoxView(
+                        box: viewModel.aiBoxes[0][colIndex],
+                        isHighlighted: viewModel.shouldHighlightAIRow(row: 0),
+                        showPlayer: viewModel.aiBoxes[0][colIndex].isDestroyed,
+                        onTap: {
+                            viewModel.handleAIBoxTap(row: 0, column: colIndex)
+                        }
+                    )
+                    .frame(width: boxSize(rowCount: 5), height: boxSize(rowCount: 5))
                 }
             }
         }
     }
     
-    // Определяет размер коробки в зависимости от ряда
-    private func boxSize(rowIndex: Int) -> CGFloat {
+    // Определяет размер коробки в зависимости от количества коробок в ряду
+    private func boxSize(rowCount: Int) -> CGFloat {
         let baseSize = min(geometry.size.width / 10, geometry.size.height / 10)
         return baseSize
     }
@@ -236,9 +317,8 @@ struct BoxView: View {
                 
                 // Если коробка уничтожена
                 if box.isDestroyed {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundColor(.red)
+                    Text("💥")
+                        .font(.largeTitle)
                 }
             }
         }

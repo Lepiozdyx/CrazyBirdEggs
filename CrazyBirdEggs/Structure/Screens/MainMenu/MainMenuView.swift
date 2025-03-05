@@ -9,17 +9,7 @@ struct MainMenuView: View {
                 // Фон
                 Color.gray.opacity(0.2).ignoresSafeArea()
                 
-                VStack(spacing: 30) {
-                    // Заголовок
-                    Text("ChickenBoxes")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    // Подзаголовок
-                    Text("Помоги цыплёнку достичь арены!")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
+                VStack {
                     Spacer()
                     
                     // Информация о прогрессе
@@ -53,9 +43,9 @@ struct MainMenuView: View {
                     
                     // Для отладки: кнопка сброса прогресса
                     #if DEBUG
-                    Button(action: {
+                    Button {
                         appState.resetProgress()
-                    }) {
+                    } label: {
                         Text("Сбросить прогресс")
                             .font(.footnote)
                             .foregroundColor(.red)
@@ -76,7 +66,7 @@ struct MainMenuView: View {
                 }
             }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
+        .navigationViewStyle(.stack)
     }
     
     // Функция для отображения предупреждения об ориентации
