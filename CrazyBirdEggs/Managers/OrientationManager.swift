@@ -64,24 +64,28 @@ struct OrientationRestrictedView<Content: View>: View {
                 content
             } else {
                 // Экран предупреждения
-                VStack(spacing: 20) {
-                    Text("Rotate the device")
-                        .font(.system(size: 32, weight: .bold, design: .default))
+                ZStack {
+                    Color.black.opacity(0.4).ignoresSafeArea()
                     
-                    Text(restrictionMessage)
-                        .font(.system(size: 20, weight: .regular, design: .default))
-                        .multilineTextAlignment(.center)
-                    
-                    Image(systemName: "rectangle.portrait.rotate")
-                        .font(.system(size: 40))
-                        .foregroundColor(.green)
+                    VStack(spacing: 20) {
+                        Text("Rotate the device")
+                            .font(.system(size: 32, weight: .bold, design: .default))
+                        
+                        Text(restrictionMessage)
+                            .font(.system(size: 20, weight: .regular, design: .default))
+                            .multilineTextAlignment(.center)
+                        
+                        Image(systemName: "rectangle.portrait.rotate")
+                            .font(.system(size: 40))
+                            .foregroundColor(.yellow)
+                    }
+                    .padding(30)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .foregroundStyle(.ultraThinMaterial)
+                            .shadow(radius: 10)
+                    )
                 }
-                .padding(30)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .foregroundStyle(.ultraThinMaterial)
-                        .shadow(radius: 10)
-                )
             }
         }
         .onAppear {
