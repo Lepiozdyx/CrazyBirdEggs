@@ -10,118 +10,116 @@ struct GameView: View {
     }
     
     var body: some View {
-        OrientationRestrictedView(requiredOrientation: .landscape, restrictionMessage: "Use landscape orientation for better experience") {
-            GeometryReader { geometry in
-                ZStack {
-                    // Фон
-                    Color.gray.opacity(0.2).ignoresSafeArea()
-                    
-                    // Игровое поле
-                    VStack {
-                        // Верхняя панель
-                        HStack {
-                            // Кнопка паузы
-                            Button {
-                                showPauseOverlay = true
-                            } label: {
-                                Image(systemName: "pause.circle.fill")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.blue)
-                            }
-                            
-                            Spacer()
-                            
-                            // Сообщение об игровой фазе
-                            Text(viewModel.gameMessage)
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            // Уровень
-                            Text("Уровень \(viewModel.currentLevel.id)")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                        .padding()
-                        .background(Color.white.opacity(0.7))
-                        
-                        Spacer()
-                        
-                        // Игровое поле с двумя пирамидами коробок и центральной ареной
-                        HStack(spacing: 10) {
-                            // Пирамида для человека (слева)
-                            HumanBoardView(
-                                viewModel: viewModel,
-                                geometry: geometry
-                            )
-                            
-                            // Центральная арена
-                            CentralArenaView()
-                                .frame(width: 80, height: 80)
-                            
-                            // Пирамида для AI (справа)
-                            AIBoardView(
-                                viewModel: viewModel,
-                                geometry: geometry
-                            )
+        GeometryReader { geometry in
+            ZStack {
+                // Фон
+                Color.gray.opacity(0.2).ignoresSafeArea()
+                
+                // Игровое поле
+                VStack {
+                    // Верхняя панель
+                    HStack {
+                        // Кнопка паузы
+                        Button {
+                            showPauseOverlay = true
+                        } label: {
+                            Image(systemName: "pause.circle.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(.blue)
                         }
                         
                         Spacer()
+                        
+                        // Сообщение об игровой фазе
+                        Text(viewModel.gameMessage)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        // Уровень
+                        Text("Уровень \(viewModel.currentLevel.id)")
+                            .font(.headline)
+                            .foregroundColor(.primary)
                     }
+                    .padding()
+                    .background(Color.white.opacity(0.7))
                     
-                    // Анимации
-                    if viewModel.showEgg {
-                        EggView()
-                            .position(viewModel.eggPosition ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
-                    }
+                    Spacer()
                     
-                    if viewModel.showExplosion {
-                        ExplosionView()
-                            .position(viewModel.explosionPosition ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
-                    }
-                    
-                    // Оверлеи
-                    if showPauseOverlay {
-                        PauseOverlayView(isPresented: $showPauseOverlay) {
-                            dismiss()
-                        }
-                    }
-                    
-                    if viewModel.showVictoryOverlay {
-                        VictoryOverlayView(
-                            levelId: viewModel.currentLevel.id,
-                            onNextLevel: {
-                                // Если есть следующий уровень, переходим к нему
-                                if viewModel.currentLevel.id < 10 {
-                                    viewModel.restartLevel()
-                                    viewModel.currentLevel = LevelModel.generateLevel(id: viewModel.currentLevel.id + 1)
-                                    viewModel.showVictoryOverlay = false
-                                } else {
-                                    // Если это последний уровень, возвращаемся в меню
-                                    dismiss()
-                                }
-                            },
-                            onBackToMenu: {
-                                dismiss()
-                            }
+                    // Игровое поле с двумя пирамидами коробок и центральной ареной
+                    HStack(spacing: 10) {
+                        // Пирамида для человека (слева)
+                        HumanBoardView(
+                            viewModel: viewModel,
+                            geometry: geometry
+                        )
+                        
+                        // Центральная арена
+                        CentralArenaView()
+                            .frame(width: 80, height: 80)
+                        
+                        // Пирамида для AI (справа)
+                        AIBoardView(
+                            viewModel: viewModel,
+                            geometry: geometry
                         )
                     }
                     
-                    if viewModel.showDefeatOverlay {
-                        DefeatOverlayView(
-                            onRestart: {
-                                viewModel.restartLevel()
-                            },
-                            onBackToMenu: {
-                                dismiss()
-                            }
-                        )
+                    Spacer()
+                }
+                
+                // Анимации
+                if viewModel.showEgg {
+                    EggView()
+                        .position(viewModel.eggPosition ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
+                }
+                
+                if viewModel.showExplosion {
+                    ExplosionView()
+                        .position(viewModel.explosionPosition ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
+                }
+                
+                // Оверлеи
+                if showPauseOverlay {
+                    PauseOverlayView(isPresented: $showPauseOverlay) {
+                        dismiss()
                     }
                 }
+                
+                if viewModel.showVictoryOverlay {
+                    VictoryOverlayView(
+                        levelId: viewModel.currentLevel.id,
+                        onNextLevel: {
+                            // Если есть следующий уровень, переходим к нему
+                            if viewModel.currentLevel.id < 10 {
+                                viewModel.restartLevel()
+                                viewModel.currentLevel = LevelModel.generateLevel(id: viewModel.currentLevel.id + 1)
+                                viewModel.showVictoryOverlay = false
+                            } else {
+                                // Если это последний уровень, возвращаемся в меню
+                                dismiss()
+                            }
+                        },
+                        onBackToMenu: {
+                            dismiss()
+                        }
+                    )
+                }
+                
+                if viewModel.showDefeatOverlay {
+                    DefeatOverlayView(
+                        onRestart: {
+                            viewModel.restartLevel()
+                        },
+                        onBackToMenu: {
+                            dismiss()
+                        }
+                    )
+                }
             }
-            .navigationBarHidden(true)
         }
+        .navigationBarHidden(true)
     }
 }
 

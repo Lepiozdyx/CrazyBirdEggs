@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Оверлей паузы
+// MARK: - PAUSE
 struct PauseOverlayView: View {
     @Binding var isPresented: Bool
     var onBackToMenu: () -> Void
@@ -11,51 +11,46 @@ struct PauseOverlayView: View {
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
             
+            Image(.chickenBackground)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 450)
+            
+            Image(.table1)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: 280)
+                .offset(y: 50)
+            
             // Контент
-            VStack(spacing: 30) {
-                Text("Пауза")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                
+            VStack(spacing: 40) {
                 // Кнопки
                 VStack(spacing: 15) {
                     // Вернуться в игру
-                    Button(action: {
+                    Button {
                         isPresented = false
-                    }) {
-                        Text("Вернуться в игру")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(width: 250, height: 50)
-                            .background(Color.blue)
-                            .cornerRadius(10)
+                    } label: {
+                        Image(.resume)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 200)
                     }
                     
                     // Выйти в меню
                     Button(action: onBackToMenu) {
-                        Text("Выйти в меню")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(width: 250, height: 50)
-                            .background(Color.red)
-                            .cornerRadius(10)
+                        Image(.menu)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 170)
                     }
                 }
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.gray.opacity(0.8))
-                    .shadow(radius: 10)
-            )
+            .offset(y: 55)
         }
     }
 }
 
-// Оверлей победы
+// MARK: - WIN
 struct VictoryOverlayView: View {
     let levelId: Int
     var onNextLevel: () -> Void
@@ -67,55 +62,78 @@ struct VictoryOverlayView: View {
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
             
-            // Контент
-            VStack(spacing: 25) {
-                Text("Победа!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                
-                Text("+100 очков")
-                    .font(.title)
-                    .foregroundColor(.yellow)
-                
-                // Кнопки
-                VStack(spacing: 15) {
-                    // Следующий уровень (если не последний)
-                    if levelId < 10 {
-                        Button(action: onNextLevel) {
-                            Text("Следующий уровень")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(width: 250, height: 50)
-                                .background(Color.green)
-                                .cornerRadius(10)
-                        }
-                    }
+            Image(.salut)
+                .resizable()
+                .opacity(0.7)
+            
+            VStack {
+                Image(.win)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 250)
+                    .padding(.top, 40)
+                Spacer()
+            }
+            
+            VStack {
+                Spacer()
+                HStack {
+                    Image(.trumpetRight)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 250)
                     
-                    // Выйти в меню
-                    Button(action: onBackToMenu) {
-                        Text("В меню")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(width: 250, height: 50)
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                    }
+                    Spacer()
+
+                    Image(.trumpetLeft)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 250)
                 }
             }
-            .padding(40)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.green.opacity(0.2))
-                    .shadow(radius: 10)
-            )
+            .opacity(0.7)
+            .ignoresSafeArea()
+            
+            VStack(spacing: 30) {
+                Spacer()
+                Spacer()
+                // Следующий уровень (если не последний)
+                if levelId < 10 {
+                    Button(action: onNextLevel) {
+                        VStack {
+                            Image(.quill)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 150)
+                                .overlay(alignment: .bottom) {
+                                    Image(._100)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(maxWidth: 80)
+                                }
+                            
+                            Image(.taptoclaim)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 150)
+                        }
+                    }
+                }
+                
+                // Выйти в меню
+                Button(action: onBackToMenu) {
+                    Image(.menu)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 170)
+                }
+                Spacer()
+            }
         }
     }
 }
 
-// Оверлей поражения
+// MARK: - LOOSE
 struct DefeatOverlayView: View {
     var onRestart: () -> Void
     var onBackToMenu: () -> Void
@@ -126,48 +144,66 @@ struct DefeatOverlayView: View {
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
             
-            // Контент
-            VStack(spacing: 30) {
-                Text("Поражение")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                
-                // Кнопки
-                VStack(spacing: 15) {
-                    // Перезапустить уровень
-                    Button(action: onRestart) {
-                        Text("Рестарт уровня")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(width: 250, height: 50)
-                            .background(Color.orange)
-                            .cornerRadius(10)
-                    }
+            VStack {
+                Image(.lose)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 250)
+                    .padding(.top, 40)
+                Spacer()
+            }
+            
+            VStack {
+                Spacer()
+                HStack {
+                    Image(.sadTrumpetLeft)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 250)
                     
-                    // Выйти в меню
-                    Button(action: onBackToMenu) {
-                        Text("В меню")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(width: 250, height: 50)
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                    }
+                    Spacer()
+
+                    Image(.sadTrumpetRight)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 250)
                 }
             }
-            .padding(40)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.red.opacity(0.2))
-                    .shadow(radius: 10)
-            )
+            .opacity(0.7)
+            .ignoresSafeArea()
+            
+            // Контент
+            VStack(spacing: 30) {
+                Spacer()
+                Spacer()
+                Button(action: onRestart) {
+                    VStack(spacing: -10) {
+                        Image(.friedChicken)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 150)
+                        
+                        Image(.restart)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 150)
+                    }
+                }
+                
+                // Выйти в меню
+                Button(action: onBackToMenu) {
+                    Image(.menu)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 170)
+                }
+                Spacer()
+            }
         }
     }
 }
 
+// MARK: - PREVIEW
 #Preview("Pause Overlay") {
     ZStack {
         Color.gray
