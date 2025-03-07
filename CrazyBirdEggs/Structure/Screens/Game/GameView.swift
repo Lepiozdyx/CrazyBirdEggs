@@ -70,10 +70,7 @@ struct GameView: View {
                         )
                         
                         // MARK: Центр
-                        Rectangle()
-                            .fill(Color.green.opacity(0.3)) // убрать цвет вконце
-                            .frame(maxWidth: 90, maxHeight: 90)
-                            .offset(y: -25)
+                        CentralArenaView(viewModel: viewModel)
                         
                         // MARK: Коробки компьютера
                         AIBoardView(
@@ -82,7 +79,7 @@ struct GameView: View {
                         )
                         
                         // MARK: Герой компьюетра
-                        Image(.chickenLvl1)
+                        Image(.lvl1)
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: 80)
@@ -319,20 +316,28 @@ struct BoxView: View {
                         pulseScale = newValue ? 1.15 : 1.0
                     }
                 
-                Image(.box1)
-                    .resizable()
-                    .scaledToFit()
+                // Отображение коробки в зависимости от состояния
+                if box.isDestroyed {
+                    // Если коробка уничтожена, показываем прозрачный контент
+                    Color.clear
+                } else if box.showExplosion {
+                    // Если показываем взрыв
+                    Image(.boom)
+                        .resizable()
+                        .scaledToFit()
+                } else {
+                    // Обычное отображение коробки
+                    Image(box.boxImageName)
+                        .resizable()
+                        .scaledToFit()
+                }
                 
-                // Если в коробке был цыпленок, его нужно показать
-                if let player = box.containsPlayer, showPlayer {
+                // Если нужно явно показать цыпленка (после взрыва или для игрока)
+                if let player = box.containsPlayer, (showPlayer || box.showChicken) {
                     ChickenView(player: player)
                 }
-                
-                // Если коробка уничтожена
-                if box.isDestroyed {
-                    ExplosionView()
-                }
             }
+            
         }
     }
     
@@ -350,21 +355,51 @@ struct BoxView: View {
     }
 }
 
+// Представление для центральной арены
+struct CentralArenaView: View {
+    @ObservedObject var viewModel: GameViewModel
+    
+    var body: some View {
+        ZStack {
+            // Фон арены
+            Rectangle()
+                .fill(Color.green.opacity(0.3)) // убрать цвет вконце
+                .frame(maxWidth: 90, maxHeight: 90)
+                .offset(y: -25)
+            
+            // Отображение цыпленка в арене, если нужно
+            if viewModel.showingCentralArenaChicken {
+                switch viewModel.arenaState {
+                case .showingHumanChicken:
+                    // Цыпленок игрока в арене
+                    Image(.hero)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 60)
+                    
+                case .showingAIChicken:
+                    // Цыпленок ИИ в арене
+                    Image(.lvl1)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 60)
+                        .scaleEffect(x: -1)
+                    
+                default:
+                    // Ничего не показываем в других состояниях
+                    EmptyView()
+                }
+            }
+        }
+    }
+}
+
 // Представление цыпленка
 struct ChickenView: View {
     let player: GamePlayer
     
     var body: some View {
-        Image(player == .human ? .hero : .chickenLvl1)
-            .resizable()
-            .scaledToFit()
-    }
-}
-
-// Анимация взрыва
-struct ExplosionView: View {
-    var body: some View {
-        Image(.boom)
+        Image(player == .human ? .hero : .lvl1)
             .resizable()
             .scaledToFit()
     }

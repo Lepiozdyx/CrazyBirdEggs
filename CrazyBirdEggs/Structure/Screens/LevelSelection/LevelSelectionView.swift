@@ -85,9 +85,8 @@ struct LevelCell: View {
             .frame(maxWidth: 250)
             .overlay {
                 
-                // TODO: - add enemy images
-                
-                Image(.chickenLvl1)
+                // TODO: - add enemy image set
+                Image(.lvl1)
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 90)

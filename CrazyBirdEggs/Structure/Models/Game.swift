@@ -14,6 +14,21 @@ enum GamePhase {
     case gameOver
 }
 
+// MARK: - Анимационные состояния
+enum BoxAnimationState {
+    case normal
+    case explosion
+    case showChicken
+    case destroyed
+}
+
+enum ArenaState {
+    case empty
+    case showingHumanChicken
+    case showingAIChicken
+    case gameOver
+}
+
 // MARK: - Models
 
 // MARK: BoxModel
@@ -23,9 +38,21 @@ struct BoxModel: Identifiable, Equatable {
     let column: Int
     var containsPlayer: GamePlayer?
     var isDestroyed: Bool = false
+    var showExplosion: Bool = false
+    var showChicken: Bool = false
     
     static func == (lhs: BoxModel, rhs: BoxModel) -> Bool {
         lhs.id == rhs.id
+    }
+    
+    var boxImageName: ImageResource {
+        if showExplosion {
+            return .boom
+        } else if containsPlayer == .human && showChicken {
+            return .inbox
+        } else {
+            return .box1
+        }
     }
 }
 
