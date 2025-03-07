@@ -12,9 +12,9 @@ class GameViewModel: ObservableObject {
     @Published var currentTurn: GamePlayer = .human
     @Published var showVictoryOverlay: Bool = false
     @Published var showDefeatOverlay: Bool = false
-    @Published var gameMessage: String = "Select a box"
+    @Published var gameMessage: String = "Select a box to place"
     
-    // Новые свойства для отслеживания состояний анимации
+    // Свойства для отслеживания состояний анимации
     @Published var arenaState: ArenaState = .empty
     @Published var showingCentralArenaChicken: Bool = false
     @Published var targetBox: BoxModel? = nil
@@ -152,14 +152,15 @@ class GameViewModel: ObservableObject {
         // Скрываем цыпленка в предыдущей коробке, если он был
         if let prevColumn = humanPlayer.currentColumn, humanPlayer.currentRow < humanBoxes.count {
             if prevColumn < humanBoxes[humanPlayer.currentRow].count {
-                humanBoxes[humanPlayer.currentRow][prevColumn].showChicken = false
                 humanBoxes[humanPlayer.currentRow][prevColumn].containsPlayer = nil
+                humanBoxes[humanPlayer.currentRow][prevColumn].boxState = .normal
             }
         }
         
         // Обновляем модель коробки
         humanBoxes[row][column].containsPlayer = .human
-        humanBoxes[row][column].showChicken = true
+        // Используем новое состояние для коробки с цыпленком
+        humanBoxes[row][column].boxState = .withChicken
         
         // Обновляем модель игрока
         humanPlayer.currentColumn = column
@@ -187,6 +188,7 @@ class GameViewModel: ObservableObject {
             
             // Размещаем цыпленка AI
             aiBoxes[row][column].containsPlayer = .ai
+            aiBoxes[row][column].boxState = .normal  // Не показываем ни коробку с цыпленком, ни цыпленка
             aiPlayer.currentColumn = column
         } else {
             let action = currentLevel.aiActions[aiActionIndex]
@@ -195,6 +197,7 @@ class GameViewModel: ObservableObject {
             
             // Размещаем цыпленка AI
             aiBoxes[row][column].containsPlayer = .ai
+            aiBoxes[row][column].boxState = .normal  // Не показываем ни коробку с цыпленком, ни цыпленка
             aiPlayer.currentColumn = column
         }
         
@@ -217,46 +220,43 @@ class GameViewModel: ObservableObject {
         // Начинаем анимацию
         currentPhase = .animation
         
-        // Анимация взрыва
-        aiBoxes[targetRow][targetColumn].showExplosion = true
+        // 1. Анимация взрыва - показать взрыв на 0.5 секунды
+        aiBoxes[targetRow][targetColumn].boxState = .explosion
         
-        // Отмечаем коробку как уничтоженную и показываем взрыв на 0.5 секунды
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
-            
-            // Скрываем анимацию взрыва
-            self.aiBoxes[targetRow][targetColumn].showExplosion = false
             
             // Проверяем, содержит ли атакованная коробка цыпленка противника
             let hitOpponent = self.aiBoxes[targetRow][targetColumn].containsPlayer == .ai
             
             if hitOpponent {
-                // Показываем цыпленка на 0.5 секунды, затем сбрасываем
-                self.aiBoxes[targetRow][targetColumn].showChicken = true
+                // 2. Показываем только цыпленка на 0.5 секунды
+                self.aiBoxes[targetRow][targetColumn].boxState = .onlyChicken
+                self.gameMessage = "You hit!!"
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                     guard let self = self else { return }
                     
-                    // Скрываем цыпленка
-                    self.aiBoxes[targetRow][targetColumn].showChicken = false
-                    
-                    // Если попали по цыпленку, возвращаем его на начальную позицию
+                    // 3. Сбрасываем состояние и возвращаем цыпленка на начальную позицию
                     self.resetPlayerPosition(player: .ai)
-                    self.gameMessage = "You hit!!"
+                    
+                    // 4. Восстанавливаем только коробки AI, так как мы попали в цыпленка AI
+                    self.resetAIDestroyedBoxes()
                     
                     // Ход AI для атаки
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                         guard let self = self else { return }
                         self.makeAIAttackMove()
                     }
                 }
             } else {
-                // Отмечаем коробку как уничтоженную
+                // Не попали - отмечаем коробку как уничтоженную
                 self.aiBoxes[targetRow][targetColumn].isDestroyed = true
+                self.aiBoxes[targetRow][targetColumn].boxState = .destroyed
                 self.gameMessage = "Miss.."
                 
                 // Ход AI для атаки
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     guard let self = self else { return }
                     self.makeAIAttackMove()
                 }
@@ -300,48 +300,95 @@ class GameViewModel: ObservableObject {
         // Показываем анимацию атаки AI
         gameMessage = "AI attack!"
         
-        // Анимация взрыва
-        humanBoxes[targetRow][targetColumn].showExplosion = true
+        // 1. Анимация взрыва - показать взрыв на 0.5 секунды
+        humanBoxes[targetRow][targetColumn].boxState = .explosion
         
         // Через задержку проверяем результат атаки
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
             
-            // Скрываем анимацию взрыва
-            self.humanBoxes[targetRow][targetColumn].showExplosion = false
-            
             // Проверяем, содержит ли атакованная коробка цыпленка игрока
             let hitPlayer = self.humanBoxes[targetRow][targetColumn].containsPlayer == .human
             
             if hitPlayer {
-                // Показываем цыпленка на 0.5 секунды, затем сбрасываем
-                self.humanBoxes[targetRow][targetColumn].showChicken = true
+                // 2. Показываем только цыпленка на 0.5 секунды
+                self.humanBoxes[targetRow][targetColumn].boxState = .onlyChicken
+                self.gameMessage = "AI hit your chicken!"
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                     guard let self = self else { return }
                     
-                    // Скрываем цыпленка
-                    self.humanBoxes[targetRow][targetColumn].showChicken = false
-                    
-                    // Если попали по цыпленку, возвращаем его на начальную позицию
+                    // 3. Сбрасываем состояние и возвращаем цыпленка на начальную позицию
                     self.resetPlayerPosition(player: .human)
-                    self.gameMessage = "AI hit your chicken!"
                     
-                    // Проверяем результаты атак и переходим к следующему ходу
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    // 4. Восстанавливаем только коробки человека, так как AI попал в цыпленка человека
+                    self.resetHumanDestroyedBoxes()
+                    
+                    // Переходим к следующему ходу
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                         guard let self = self else { return }
                         self.moveToNextTurn()
                     }
                 }
             } else {
-                // Отмечаем коробку как уничтоженную
+                // Не попали - отмечаем коробку как уничтоженную
                 self.humanBoxes[targetRow][targetColumn].isDestroyed = true
+                self.humanBoxes[targetRow][targetColumn].boxState = .destroyed
                 self.gameMessage = "AI miss.."
                 
-                // Проверяем результаты атак и переходим к следующему ходу
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                // Переходим к следующему ходу
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     guard let self = self else { return }
                     self.moveToNextTurn()
+                }
+            }
+        }
+    }
+    
+    // Сброс коробок человеческого игрока
+    private func resetHumanDestroyedBoxes() {
+        // Восстанавливаем только коробки для человека
+        for i in 0..<humanBoxes.count {
+            for j in 0..<humanBoxes[i].count {
+                if humanBoxes[i][j].boxState == .destroyed {
+                    humanBoxes[i][j].boxState = .normal
+                    humanBoxes[i][j].isDestroyed = false
+                }
+            }
+        }
+    }
+
+    // Сброс коробок AI
+    private func resetAIDestroyedBoxes() {
+        // Восстанавливаем только коробки для AI
+        for i in 0..<aiBoxes.count {
+            for j in 0..<aiBoxes[i].count {
+                if aiBoxes[i][j].boxState == .destroyed {
+                    aiBoxes[i][j].boxState = .normal
+                    aiBoxes[i][j].isDestroyed = false
+                }
+            }
+        }
+    }
+    
+    // Сброс всех уничтоженных коробок
+    private func resetAllDestroyedBoxes() {
+        // Восстанавливаем все уничтоженные коробки для человека
+        for i in 0..<humanBoxes.count {
+            for j in 0..<humanBoxes[i].count {
+                if humanBoxes[i][j].boxState == .destroyed {
+                    humanBoxes[i][j].boxState = .normal
+                    humanBoxes[i][j].isDestroyed = false
+                }
+            }
+        }
+        
+        // Восстанавливаем все уничтоженные коробки для AI
+        for i in 0..<aiBoxes.count {
+            for j in 0..<aiBoxes[i].count {
+                if aiBoxes[i][j].boxState == .destroyed {
+                    aiBoxes[i][j].boxState = .normal
+                    aiBoxes[i][j].isDestroyed = false
                 }
             }
         }
@@ -355,7 +402,7 @@ class GameViewModel: ObservableObject {
                 if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
                     // Очищаем информацию о наличии игрока в коробке
                     humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
-                    humanBoxes[humanPlayer.currentRow][column].showChicken = false
+                    humanBoxes[humanPlayer.currentRow][column].boxState = .normal
                 }
             }
             
@@ -368,7 +415,7 @@ class GameViewModel: ObservableObject {
                 if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
                     // Очищаем информацию о наличии AI в коробке
                     aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
-                    aiBoxes[aiPlayer.currentRow][column].showChicken = false
+                    aiBoxes[aiPlayer.currentRow][column].boxState = .normal
                 }
             }
             
@@ -378,138 +425,20 @@ class GameViewModel: ObservableObject {
         }
     }
     
-    // Переход к следующему ходу
-    private func moveToNextTurn() {
-        animationInProgress = false
-        
-        // Если AI был сбит, а человек нет
-        if aiPlayer.currentColumn == nil && humanPlayer.currentColumn != nil {
-            // Перемещаем человека на следующий ряд
-            moveHumanPlayerToNextRow()
-            
-            // Проверяем, не достиг ли человек центральной арены
-            if humanPlayer.currentRow >= 4 {
-                handleHumanWin()
-                return
-            }
-            
-            // Сбрасываем состояние разрушения для всех ячеек
-            resetDestroyedState()
-            
-            // Переходим к фазе размещения для человека (сначала размещение, затем атака)
-            currentPhase = .placement
-            currentTurn = .human
-            gameMessage = "Select a box"
-            return
-        }
-        
-        // Если человек был сбит, а AI нет
-        if humanPlayer.currentColumn == nil && aiPlayer.currentColumn != nil {
-            // Перемещаем AI на следующий ряд
-            moveAIPlayerToNextRow()
-            
-            // Проверяем, не достиг ли AI центральной арены
-            if aiPlayer.currentRow >= 4 {
-                handleAIWin()
-                return
-            }
-            
-            // Сбрасываем состояние разрушения для всех ячеек
-            resetDestroyedState()
-            
-            // Переходим к фазе размещения для человека
-            currentPhase = .placement
-            currentTurn = .human
-            gameMessage = "Select a box"
-            return
-        }
-        
-        // Если оба игрока не были сбиты, они оба перемещаются вперед
-        if humanPlayer.currentColumn != nil && aiPlayer.currentColumn != nil {
-            movePlayersToNextRow()
-            
-            // Проверяем условие победы после перемещения
-            if humanPlayer.currentRow >= 4 {
-                handleHumanWin()
-                return
-            }
-            
-            if aiPlayer.currentRow >= 4 {
-                handleAIWin()
-                return
-            }
-            
-            return
-        }
-        
-        // Если оба были сбиты (маловероятный сценарий, но на всякий случай)
-        resetDestroyedState()
-        currentPhase = .placement
-        currentTurn = .human
-        gameMessage = "Select a box"
-    }
-    
-    // Перемещение только человеческого игрока на следующий ряд
-    private func moveHumanPlayerToNextRow() {
-        // Очищаем текущую позицию
-        if let column = humanPlayer.currentColumn {
-            if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
-                humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
-            }
-        }
-        
-        // Увеличиваем индекс ряда
-        humanPlayer.currentRow += 1
-        
-        // Сбрасываем колонку
-        humanPlayer.currentColumn = nil
-    }
-    
-    // Перемещение только AI на следующий ряд
-    private func moveAIPlayerToNextRow() {
-        // Очищаем текущую позицию
-        if let column = aiPlayer.currentColumn {
-            if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
-                aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
-            }
-        }
-        
-        // Увеличиваем индекс ряда
-        aiPlayer.currentRow += 1
-        
-        // Сбрасываем колонку
-        aiPlayer.currentColumn = nil
-    }
-    
-    // Сброс состояния разрушения для всех ячеек
-    private func resetDestroyedState() {
-        // Сбрасываем состояние разрушения для коробок человека
-        for i in 0..<humanBoxes.count {
-            for j in 0..<humanBoxes[i].count {
-                humanBoxes[i][j].isDestroyed = false
-            }
-        }
-        
-        // Сбрасываем состояние разрушения для коробок AI
-        for i in 0..<aiBoxes.count {
-            for j in 0..<aiBoxes[i].count {
-                aiBoxes[i][j].isDestroyed = false
-            }
-        }
-    }
-    
     // Перемещение игроков на следующий ряд
     private func movePlayersToNextRow() {
         // Очищаем текущие позиции
         if let column = humanPlayer.currentColumn {
             if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
                 humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
+                humanBoxes[humanPlayer.currentRow][column].boxState = .normal
             }
         }
         
         if let column = aiPlayer.currentColumn {
             if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
                 aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
+                aiBoxes[aiPlayer.currentRow][column].boxState = .normal
             }
         }
         
@@ -535,20 +464,119 @@ class GameViewModel: ObservableObject {
         // Увеличиваем индекс действий AI
         aiActionIndex += 1
         
-        // Сбрасываем состояние разрушения для всех ячеек
-        resetDestroyedState()
-        
         // Переходим к фазе размещения
         currentPhase = .placement
         currentTurn = .human
-        gameMessage = "Select a box"
+        gameMessage = "Select a box to place"
     }
     
-    // Обработка победы человека
+    // Переход к следующему ходу
+    private func moveToNextTurn() {
+        animationInProgress = false
+        
+        // Если AI был сбит, а человек нет
+        if aiPlayer.currentColumn == nil && humanPlayer.currentColumn != nil {
+            // Перемещаем человека на следующий ряд
+            moveHumanPlayerToNextRow()
+            
+            // Проверяем, не достиг ли человек центральной арены
+            if humanPlayer.currentRow >= 4 {
+                handleHumanWin()
+                return
+            }
+            
+            // Переходим к фазе размещения для человека (сначала размещение, затем атака)
+            currentPhase = .placement
+            currentTurn = .human
+            gameMessage = "Select a box to place"
+            return
+        }
+        
+        // Если человек был сбит, а AI нет
+        if humanPlayer.currentColumn == nil && aiPlayer.currentColumn != nil {
+            // Перемещаем AI на следующий ряд
+            moveAIPlayerToNextRow()
+            
+            // Проверяем, не достиг ли AI центральной арены
+            if aiPlayer.currentRow >= 4 {
+                handleAIWin()
+                return
+            }
+            
+            // Переходим к фазе размещения для человека
+            currentPhase = .placement
+            currentTurn = .human
+            gameMessage = "Select a box to place"
+            return
+        }
+        
+        // Если оба игрока не были сбиты, они оба перемещаются вперед
+        if humanPlayer.currentColumn != nil && aiPlayer.currentColumn != nil {
+            movePlayersToNextRow()
+            
+            // Проверяем условие победы после перемещения
+            if humanPlayer.currentRow >= 4 {
+                handleHumanWin()
+                return
+            }
+            
+            if aiPlayer.currentRow >= 4 {
+                handleAIWin()
+                return
+            }
+            
+            return
+        }
+        
+        // Если оба были сбиты (маловероятный сценарий, но на всякий случай)
+        currentPhase = .placement
+        currentTurn = .human
+        gameMessage = "Select a box to place"
+    }
+    
+    // Перемещение только человеческого игрока на следующий ряд
+    private func moveHumanPlayerToNextRow() {
+        // Очищаем текущую позицию
+        if let column = humanPlayer.currentColumn {
+            if humanPlayer.currentRow < humanBoxes.count && column < humanBoxes[humanPlayer.currentRow].count {
+                humanBoxes[humanPlayer.currentRow][column].containsPlayer = nil
+                humanBoxes[humanPlayer.currentRow][column].boxState = .normal
+            }
+        }
+        
+        // Увеличиваем индекс ряда
+        humanPlayer.currentRow += 1
+        
+        // Сбрасываем колонку
+        humanPlayer.currentColumn = nil
+    }
+    
+    // Перемещение только AI на следующий ряд
+    private func moveAIPlayerToNextRow() {
+        // Очищаем текущую позицию
+        if let column = aiPlayer.currentColumn {
+            if aiPlayer.currentRow < aiBoxes.count && column < aiBoxes[aiPlayer.currentRow].count {
+                aiBoxes[aiPlayer.currentRow][column].containsPlayer = nil
+                aiBoxes[aiPlayer.currentRow][column].boxState = .normal
+            }
+        }
+        
+        // Увеличиваем индекс ряда
+        aiPlayer.currentRow += 1
+        
+        // Сбрасываем колонку
+        aiPlayer.currentColumn = nil
+    }
+    
+    // Перемещение игроков на следующий ряд
     private func handleHumanWin() {
         // Показываем цыпленка в центральной арене на 0.5 секунды
         showingCentralArenaChicken = true
         arenaState = .showingHumanChicken
+        
+        // Восстанавливаем все коробки перед показом экрана победы
+        resetHumanDestroyedBoxes()
+        resetAIDestroyedBoxes()
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
@@ -570,6 +598,10 @@ class GameViewModel: ObservableObject {
         showingCentralArenaChicken = true
         arenaState = .showingAIChicken
         
+        // Восстанавливаем все коробки перед показом экрана поражения
+        resetHumanDestroyedBoxes()
+        resetAIDestroyedBoxes()
+        
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
             
@@ -590,15 +622,15 @@ class GameViewModel: ObservableObject {
         showDefeatOverlay = false
         humanPlayer = PlayerModel(type: .human)
         aiPlayer = PlayerModel(type: .ai)
-        gameMessage = "Select a box"
+        gameMessage = "Select a box to place"
         arenaState = .empty
         showingCentralArenaChicken = false
         
         // Пересоздаем игровое поле
         createBoxes()
         
-        // Сбрасываем состояние разрушения для всех ячеек
-        resetDestroyedState()
+        // Сбрасываем анимационный флаг
+        animationInProgress = false
     }
     
     // Проверка, нужно ли подсвечивать ряд human коробок

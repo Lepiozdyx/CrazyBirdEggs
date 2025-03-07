@@ -317,28 +317,19 @@ struct BoxView: View {
                     }
                 
                 // Отображение коробки в зависимости от состояния
-                if box.isDestroyed {
-                    // Если коробка уничтожена, показываем прозрачный контент
-                    Color.clear
-                } else if box.showExplosion {
-                    // Если показываем взрыв
-                    Image(.boom)
-                        .resizable()
-                        .scaledToFit()
-                } else {
-                    // Обычное отображение коробки
-                    Image(box.boxImageName)
+                if let imageName = box.boxImageName {
+                    Image(imageName)
                         .resizable()
                         .scaledToFit()
                 }
                 
-                // Если нужно явно показать цыпленка (после взрыва или для игрока)
-                if let player = box.containsPlayer, (showPlayer || box.showChicken) {
-                    ChickenView(player: player)
+                // Показываем цыпленка только если нужно
+                if box.shouldShowChicken && box.containsPlayer != nil {
+                    ChickenView(player: box.containsPlayer!)
                 }
             }
-            
         }
+        .disabled(box.isDestroyed || box.boxState == .explosion || box.boxState == .onlyChicken)
     }
     
     // Цвет коробки
@@ -346,11 +337,6 @@ struct BoxView: View {
         if isHighlighted {
             return .yellow.opacity(0.7)
         }
-        
-        if box.isDestroyed {
-            return .clear
-        }
-        
         return .clear
     }
 }
