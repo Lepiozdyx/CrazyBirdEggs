@@ -289,8 +289,10 @@ struct AIBoardView: View {
     }
 }
 
-// Представление одной коробки
+// MARK: - BoxView
 struct BoxView: View {
+    @State private var pulseScale: CGFloat = 1.0
+    
     let box: BoxModel
     let isHighlighted: Bool
     let showPlayer: Bool
@@ -303,6 +305,19 @@ struct BoxView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .foregroundStyle(boxColor)
                     .shadow(radius: isHighlighted ? 3 : 1)
+                    .scaleEffect(isHighlighted ? pulseScale : 1.0)
+                    .animation(
+                        .easeInOut(duration: 0.5)
+                        .repeatForever(autoreverses: true), value: pulseScale
+                    )
+                    .onAppear {
+                        if isHighlighted {
+                            pulseScale = 1.15
+                        }
+                    }
+                    .onChange(of: isHighlighted) { newValue in
+                        pulseScale = newValue ? 1.15 : 1.0
+                    }
                 
                 Image(.box1)
                     .resizable()
@@ -324,7 +339,7 @@ struct BoxView: View {
     // Цвет коробки
     private var boxColor: Color {
         if isHighlighted {
-            return .yellow.opacity(0.9)
+            return .yellow.opacity(0.7)
         }
         
         if box.isDestroyed {
