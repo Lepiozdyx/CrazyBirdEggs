@@ -141,62 +141,70 @@ struct HumanBoardView: View {
     var body: some View {
         HStack(spacing: 10) {
             // Ряд 0 (5 коробок)
-            VStack(spacing: 10) {
-                ForEach(0..<5) { colIndex in
-                    BoxView(
-                        box: viewModel.humanBoxes[0][colIndex],
-                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 0),
-                        showPlayer: true,
-                        onTap: {
-                            viewModel.handleHumanBoxTap(row: 0, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 5), height: boxSize(rowCount: 5))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightHumanRow(row: 0)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<5) { colIndex in
+                        BoxView(
+                            box: viewModel.humanBoxes[0][colIndex],
+                            isHighlighted: viewModel.shouldHighlightHumanRow(row: 0),
+                            showPlayer: true,
+                            onTap: {
+                                viewModel.handleHumanBoxTap(row: 0, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 5), height: boxSize(rowCount: 5))
+                    }
                 }
             }
             
             // Ряд 1 (4 коробки)
-            VStack(spacing: 10) {
-                ForEach(0..<4) { colIndex in
-                    BoxView(
-                        box: viewModel.humanBoxes[1][colIndex],
-                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 1),
-                        showPlayer: true,
-                        onTap: {
-                            viewModel.handleHumanBoxTap(row: 1, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 4), height: boxSize(rowCount: 4))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightHumanRow(row: 1)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<4) { colIndex in
+                        BoxView(
+                            box: viewModel.humanBoxes[1][colIndex],
+                            isHighlighted: viewModel.shouldHighlightHumanRow(row: 1),
+                            showPlayer: true,
+                            onTap: {
+                                viewModel.handleHumanBoxTap(row: 1, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 4), height: boxSize(rowCount: 4))
+                    }
                 }
             }
             
             // Ряд 2 (3 коробки)
-            VStack(spacing: 10) {
-                ForEach(0..<3) { colIndex in
-                    BoxView(
-                        box: viewModel.humanBoxes[2][colIndex],
-                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 2),
-                        showPlayer: true,
-                        onTap: {
-                            viewModel.handleHumanBoxTap(row: 2, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 3), height: boxSize(rowCount: 3))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightHumanRow(row: 2)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<3) { colIndex in
+                        BoxView(
+                            box: viewModel.humanBoxes[2][colIndex],
+                            isHighlighted: viewModel.shouldHighlightHumanRow(row: 2),
+                            showPlayer: true,
+                            onTap: {
+                                viewModel.handleHumanBoxTap(row: 2, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 3), height: boxSize(rowCount: 3))
+                    }
                 }
             }
             
             // Ряд 3 (2 коробки)
-            VStack(spacing: 10) {
-                ForEach(0..<2) { colIndex in
-                    BoxView(
-                        box: viewModel.humanBoxes[3][colIndex],
-                        isHighlighted: viewModel.shouldHighlightHumanRow(row: 3),
-                        showPlayer: true,
-                        onTap: {
-                            viewModel.handleHumanBoxTap(row: 3, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 2), height: boxSize(rowCount: 2))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightHumanRow(row: 3)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<2) { colIndex in
+                        BoxView(
+                            box: viewModel.humanBoxes[3][colIndex],
+                            isHighlighted: viewModel.shouldHighlightHumanRow(row: 3),
+                            showPlayer: true,
+                            onTap: {
+                                viewModel.handleHumanBoxTap(row: 3, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 2), height: boxSize(rowCount: 2))
+                    }
                 }
             }
         }
@@ -217,63 +225,70 @@ struct AIBoardView: View {
     var body: some View {
         HStack(spacing: 10) {
             // Ряд 3 (2 коробки)
-            VStack(spacing: 10) {
-                ForEach(0..<2) { colIndex in
-                    BoxView(
-                        box: viewModel.aiBoxes[3][colIndex],
-                        isHighlighted: viewModel.shouldHighlightAIRow(row: 3),
-                        // Игроку не видно, где находится цыпленок AI, пока по нему не попадут
-                        showPlayer: viewModel.aiBoxes[3][colIndex].isDestroyed,
-                        onTap: {
-                            viewModel.handleAIBoxTap(row: 3, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 2), height: boxSize(rowCount: 2))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 3)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<2) { colIndex in
+                        BoxView(
+                            box: viewModel.aiBoxes[3][colIndex],
+                            isHighlighted: viewModel.shouldHighlightAIRow(row: 3),
+                            showPlayer: viewModel.aiBoxes[3][colIndex].isDestroyed,
+                            onTap: {
+                                viewModel.handleAIBoxTap(row: 3, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 2), height: boxSize(rowCount: 2))
+                    }
                 }
             }
             
             // Ряд 2 (3 коробки)
-            VStack(spacing: 10) {
-                ForEach(0..<3) { colIndex in
-                    BoxView(
-                        box: viewModel.aiBoxes[2][colIndex],
-                        isHighlighted: viewModel.shouldHighlightAIRow(row: 2),
-                        showPlayer: viewModel.aiBoxes[2][colIndex].isDestroyed,
-                        onTap: {
-                            viewModel.handleAIBoxTap(row: 2, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 3), height: boxSize(rowCount: 3))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 2)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<3) { colIndex in
+                        BoxView(
+                            box: viewModel.aiBoxes[2][colIndex],
+                            isHighlighted: viewModel.shouldHighlightAIRow(row: 2),
+                            showPlayer: viewModel.aiBoxes[2][colIndex].isDestroyed,
+                            onTap: {
+                                viewModel.handleAIBoxTap(row: 2, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 3), height: boxSize(rowCount: 3))
+                    }
                 }
             }
             
             // Ряд 1 (4 коробки)
-            VStack(spacing: 10) {
-                ForEach(0..<4) { colIndex in
-                    BoxView(
-                        box: viewModel.aiBoxes[1][colIndex],
-                        isHighlighted: viewModel.shouldHighlightAIRow(row: 1),
-                        showPlayer: viewModel.aiBoxes[1][colIndex].isDestroyed,
-                        onTap: {
-                            viewModel.handleAIBoxTap(row: 1, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 4), height: boxSize(rowCount: 4))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 1)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<4) { colIndex in
+                        BoxView(
+                            box: viewModel.aiBoxes[1][colIndex],
+                            isHighlighted: viewModel.shouldHighlightAIRow(row: 1),
+                            showPlayer: viewModel.aiBoxes[1][colIndex].isDestroyed,
+                            onTap: {
+                                viewModel.handleAIBoxTap(row: 1, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 4), height: boxSize(rowCount: 4))
+                    }
                 }
             }
             
             // Ряд 0 (5 коробок)
-            VStack(spacing: 10) {
-                ForEach(0..<5) { colIndex in
-                    BoxView(
-                        box: viewModel.aiBoxes[0][colIndex],
-                        isHighlighted: viewModel.shouldHighlightAIRow(row: 0),
-                        showPlayer: viewModel.aiBoxes[0][colIndex].isDestroyed,
-                        onTap: {
-                            viewModel.handleAIBoxTap(row: 0, column: colIndex)
-                        }
-                    )
-                    .frame(width: boxSize(rowCount: 5), height: boxSize(rowCount: 5))
+            AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 0)) {
+                VStack(spacing: 10) {
+                    ForEach(0..<5) { colIndex in
+                        BoxView(
+                            box: viewModel.aiBoxes[0][colIndex],
+                            isHighlighted: viewModel.shouldHighlightAIRow(row: 0),
+                            showPlayer: viewModel.aiBoxes[0][colIndex].isDestroyed,
+                            onTap: {
+                                viewModel.handleAIBoxTap(row: 0, column: colIndex)
+                            }
+                        )
+                        .frame(width: boxSize(rowCount: 5), height: boxSize(rowCount: 5))
+                    }
                 }
             }
         }
@@ -288,8 +303,6 @@ struct AIBoardView: View {
 
 // MARK: - BoxView
 struct BoxView: View {
-    @State private var pulseScale: CGFloat = 1.0
-    
     let box: BoxModel
     let isHighlighted: Bool
     let showPlayer: Bool
@@ -298,23 +311,7 @@ struct BoxView: View {
     var body: some View {
         Button(action: onTap) {
             ZStack {
-                // Фон коробки
-                RoundedRectangle(cornerRadius: 8)
-                    .foregroundStyle(boxColor)
-                    .shadow(radius: isHighlighted ? 3 : 1)
-                    .scaleEffect(isHighlighted ? pulseScale : 1.0)
-                    .animation(
-                        .easeInOut(duration: 0.5)
-                        .repeatForever(autoreverses: true), value: pulseScale
-                    )
-                    .onAppear {
-                        if isHighlighted {
-                            pulseScale = 1.15
-                        }
-                    }
-                    .onChange(of: isHighlighted) { newValue in
-                        pulseScale = newValue ? 1.15 : 1.0
-                    }
+                // Удаляем все связанное с анимацией, так как это будет на уровне ряда
                 
                 // Отображение коробки в зависимости от состояния
                 if let imageName = box.boxImageName {
@@ -331,13 +328,46 @@ struct BoxView: View {
         }
         .disabled(box.isDestroyed || box.boxState == .explosion || box.boxState == .onlyChicken)
     }
+}
+
+struct AnimatedRowView<Content: View>: View {
+    let isHighlighted: Bool
+    let content: Content
+    @State private var pulseScale: CGFloat = 1.0
     
-    // Цвет коробки
-    private var boxColor: Color {
-        if isHighlighted {
-            return .yellow.opacity(0.7)
-        }
-        return .clear
+    init(isHighlighted: Bool, @ViewBuilder content: () -> Content) {
+        self.isHighlighted = isHighlighted
+        self.content = content()
+    }
+    
+    var body: some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isHighlighted ? .yellow.opacity(0.7) : .clear)
+                    .scaleEffect(isHighlighted ? pulseScale : 1.0)
+                    .animation(
+                        isHighlighted ?
+                            .easeInOut(duration: 0.5).repeatCount(5) :
+                            nil,
+                        value: pulseScale
+                    )
+            )
+            .onAppear {
+                // Установить начальное значение анимации при появлении
+                if isHighlighted {
+                    pulseScale = 1.05
+                }
+            }
+            .onChange(of: isHighlighted) { newValue in
+                // Сбросить значение при изменении подсветки
+                if !newValue {
+                    pulseScale = 1.0
+                } else {
+                    // При активации подсветки установить значение для начала анимации
+                    pulseScale = 1.05
+                }
+            }
     }
 }
 
@@ -349,9 +379,9 @@ struct CentralArenaView: View {
         ZStack {
             // Фон арены
             Rectangle()
-                .fill(Color.green.opacity(0.3)) // убрать цвет вконце
+                .fill(.clear)
                 .frame(maxWidth: 90, maxHeight: 90)
-                .offset(y: -25)
+                .offset(y: -35)
             
             // Отображение цыпленка в арене, если нужно
             if viewModel.showingCentralArenaChicken {
