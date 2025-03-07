@@ -12,7 +12,7 @@ class GameViewModel: ObservableObject {
     @Published var currentTurn: GamePlayer = .human
     @Published var showVictoryOverlay: Bool = false
     @Published var showDefeatOverlay: Bool = false
-    @Published var gameMessage: String = "Выберите коробку для размещения"
+    @Published var gameMessage: String = "Select a box to place"
     
     // MARK: - Private Properties
     
@@ -23,10 +23,10 @@ class GameViewModel: ObservableObject {
     // MARK: - Animation Properties
     
     @Published var eggPosition: CGPoint? = nil
-    @Published var showEgg: Bool = false
     @Published var targetBox: BoxModel? = nil
-    @Published var showExplosion: Bool = false
-    @Published var explosionPosition: CGPoint? = nil
+//    @Published var showEgg: Bool = false
+//    @Published var showExplosion: Bool = false
+//    @Published var explosionPosition: CGPoint? = nil
     
     // MARK: - Init
     
@@ -195,7 +195,7 @@ class GameViewModel: ObservableObject {
         // Переходим к фазе атаки
         currentPhase = .attack
         currentTurn = .human
-        gameMessage = "Выберите коробку для атаки"
+        gameMessage = "Select a box to attack"
     }
     
     // Атака на коробку AI
@@ -213,13 +213,13 @@ class GameViewModel: ObservableObject {
         
         // Устанавливаем позицию яйца (будет использоваться для анимации)
         targetBox = aiBoxes[targetRow][targetColumn]
-        showEgg = true
+//        showEgg = true
         
         // Через задержку показываем взрыв
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
-            self.showEgg = false
-            self.showExplosion = true
+//            self.showEgg = false
+//            self.showExplosion = true
             
             // Отмечаем коробку как уничтоженную
             self.aiBoxes[targetRow][targetColumn].isDestroyed = true
@@ -231,15 +231,15 @@ class GameViewModel: ObservableObject {
                 // Если попали по цыпленку, возвращаем его на начальную позицию
                 // Это также очистит containsPlayer в текущей коробке
                 self.resetPlayerPosition(player: .ai)
-                self.gameMessage = "Вы сбили цыпленка противника!"
+                self.gameMessage = "You hit!!"
             } else {
-                self.gameMessage = "Промах!"
+                self.gameMessage = "Miss.."
             }
             
             // Скрываем взрыв через некоторое время
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self = self else { return }
-                self.showExplosion = false
+//                self.showExplosion = false
                 
                 // Теперь ход AI для атаки
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
@@ -288,13 +288,13 @@ class GameViewModel: ObservableObject {
         
         // Устанавливаем позицию яйца
         targetBox = humanBoxes[targetRow][targetColumn]
-        showEgg = true
+//        showEgg = true
         
         // Через задержку показываем взрыв
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self = self else { return }
-            self.showEgg = false
-            self.showExplosion = true
+//            self.showEgg = false
+//            self.showExplosion = true
             
             // Отмечаем коробку как уничтоженную
             self.humanBoxes[targetRow][targetColumn].isDestroyed = true
@@ -306,15 +306,15 @@ class GameViewModel: ObservableObject {
                 // Если попали по цыпленку, возвращаем его на начальную позицию
                 // Это также очистит containsPlayer в текущей коробке
                 self.resetPlayerPosition(player: .human)
-                self.gameMessage = "AI сбил вашего цыпленка!"
+                self.gameMessage = "AI hit your chicken!"
             } else {
-                self.gameMessage = "AI промахнулся!"
+                self.gameMessage = "AI miss.."
             }
             
             // Скрываем взрыв через некоторое время
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 guard let self = self else { return }
-                self.showExplosion = false
+//                self.showExplosion = false
                 
                 // Проверяем результаты атак и переходим к следующему ходу
                 self.moveToNextTurn()
@@ -372,7 +372,7 @@ class GameViewModel: ObservableObject {
             // Переходим к фазе размещения для человека (сначала размещение, затем атака)
             currentPhase = .placement
             currentTurn = .human
-            gameMessage = "Выберите коробку для размещения"
+            gameMessage = "Select a box to place"
             return
         }
         
@@ -393,7 +393,7 @@ class GameViewModel: ObservableObject {
             // Переходим к фазе размещения для человека
             currentPhase = .placement
             currentTurn = .human
-            gameMessage = "Выберите коробку для размещения"
+            gameMessage = "Select a box to place"
             return
         }
         
@@ -419,7 +419,7 @@ class GameViewModel: ObservableObject {
         resetDestroyedState()
         currentPhase = .placement
         currentTurn = .human
-        gameMessage = "Выберите коробку для размещения"
+        gameMessage = "Select a box to place"
     }
     
     // Перемещение только человеческого игрока на следующий ряд
@@ -514,7 +514,7 @@ class GameViewModel: ObservableObject {
         // Переходим к фазе размещения
         currentPhase = .placement
         currentTurn = .human
-        gameMessage = "Выберите коробку для размещения"
+        gameMessage = "Select a box to place"
     }
     
     // Обработка победы человека
@@ -541,7 +541,7 @@ class GameViewModel: ObservableObject {
         showDefeatOverlay = false
         humanPlayer = PlayerModel(type: .human)
         aiPlayer = PlayerModel(type: .ai)
-        gameMessage = "Выберите коробку для размещения"
+        gameMessage = "Select a box to place"
         
         // Пересоздаем игровое поле
         createBoxes()

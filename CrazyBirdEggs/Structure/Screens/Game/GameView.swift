@@ -12,75 +12,88 @@ struct GameView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Фон
-                Color.gray.opacity(0.2).ignoresSafeArea()
+                Image(.battlemap)
+                    .resizable()
+                    .ignoresSafeArea()
                 
-                // Игровое поле
                 VStack {
-                    // Верхняя панель
+                    // MARK: Верхняя панель
                     HStack {
-                        // Кнопка паузы
+                        // MARK: Кнопка паузы
                         Button {
                             showPauseOverlay = true
                         } label: {
-                            Image(systemName: "pause.circle.fill")
-                                .font(.largeTitle)
-                                .foregroundColor(.blue)
+                            Image(.pausebutton)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 50)
                         }
                         
                         Spacer()
+                        Spacer()
                         
-                        // Сообщение об игровой фазе
+                        // MARK: Сообщение об игровой фазе
                         Text(viewModel.gameMessage)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                            .font(.system(size: 20, weight: .bold, design: .serif))
+                            .foregroundColor(.white)
+                            .padding(.horizontal)
+                            .padding(.vertical, 4)
+                            .background(
+                                Image(.topbarrectangle)
+                                    .resizable()
+                                    .clipShape(.rect(cornerRadius: 10))
+                            )
                         
                         Spacer()
                         
-                        // Уровень
-                        Text("Уровень \(viewModel.currentLevel.id)")
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                        // MARK: Settings panel
+                        SettingsPanelView()
+                        
                     }
-                    .padding()
-                    .background(Color.white.opacity(0.7))
+                    .padding(.horizontal)
+                    .padding(.top)
                     
                     Spacer()
                     
-                    // Игровое поле с двумя пирамидами коробок и центральной ареной
+                    // MARK: Игровое поле
                     HStack(spacing: 10) {
-                        // Пирамида для человека (слева)
+                        // MARK: Герой игрока
+                        Image(.hero)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 60)
+                        
+                        // MARK: Коробки игрока
                         HumanBoardView(
                             viewModel: viewModel,
                             geometry: geometry
                         )
                         
-                        // Центральная арена
-                        CentralArenaView()
-                            .frame(width: 80, height: 80)
+                        // MARK: Центр
+                        Rectangle()
+                            .fill(Color.green.opacity(0.3)) // убрать цвет вконце
+                            .frame(maxWidth: 90, maxHeight: 90)
+                            .offset(y: -25)
                         
-                        // Пирамида для AI (справа)
+                        // MARK: Коробки компьютера
                         AIBoardView(
                             viewModel: viewModel,
                             geometry: geometry
                         )
+                        
+                        // MARK: Герой компьюетра
+                        Image(.chickenLvl1)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 80)
+                            // поворачиваем влево
+                            .scaleEffect(x: -1)
                     }
                     
                     Spacer()
                 }
                 
-                // Анимации
-                if viewModel.showEgg {
-                    EggView()
-                        .position(viewModel.eggPosition ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
-                }
-                
-                if viewModel.showExplosion {
-                    ExplosionView()
-                        .position(viewModel.explosionPosition ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2))
-                }
-                
-                // Оверлеи
+                // MARK: Оверлеи
                 if showPauseOverlay {
                     PauseOverlayView(isPresented: $showPauseOverlay) {
                         dismiss()
@@ -123,29 +136,13 @@ struct GameView: View {
     }
 }
 
-// Центральная арена
-struct CentralArenaView: View {
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(Color.green.opacity(0.3))
-                .shadow(radius: 3)
-            
-            Text("АРЕНА")
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundColor(.green)
-        }
-    }
-}
-
-// Игровое поле для человека (левая пирамида, вершиной вправо к арене)
+// MARK: - Игровое поле для человека (левая пирамида, вершиной вправо к арене)
 struct HumanBoardView: View {
     @ObservedObject var viewModel: GameViewModel
     let geometry: GeometryProxy
     
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(spacing: 10) {
             // Ряд 0 (5 коробок)
             VStack(spacing: 10) {
                 ForEach(0..<5) { colIndex in
@@ -221,7 +218,7 @@ struct AIBoardView: View {
     let geometry: GeometryProxy
     
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(spacing: 10) {
             // Ряд 3 (2 коробки)
             VStack(spacing: 10) {
                 ForEach(0..<2) { colIndex in
@@ -304,18 +301,21 @@ struct BoxView: View {
             ZStack {
                 // Фон коробки
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(boxColor)
+                    .foregroundStyle(boxColor)
                     .shadow(radius: isHighlighted ? 3 : 1)
                 
-                // Если в коробке есть цыпленок и его нужно показать
+                Image(.box1)
+                    .resizable()
+                    .scaledToFit()
+                
+                // Если в коробке был цыпленок, его нужно показать
                 if let player = box.containsPlayer, showPlayer {
                     ChickenView(player: player)
                 }
                 
                 // Если коробка уничтожена
                 if box.isDestroyed {
-                    Text("💥")
-                        .font(.largeTitle)
+                    ExplosionView()
                 }
             }
         }
@@ -324,14 +324,14 @@ struct BoxView: View {
     // Цвет коробки
     private var boxColor: Color {
         if isHighlighted {
-            return Color.yellow.opacity(0.5)
+            return .yellow.opacity(0.9)
         }
         
         if box.isDestroyed {
-            return Color.red.opacity(0.3)
+            return .clear
         }
         
-        return Color.white
+        return .clear
     }
 }
 
@@ -340,32 +340,55 @@ struct ChickenView: View {
     let player: GamePlayer
     
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(player == .human ? Color.blue.opacity(0.7) : Color.red.opacity(0.7))
-            
-            Text("🐥")
-                .font(.body)
-        }
-    }
-}
-
-// Анимация яйца
-struct EggView: View {
-    var body: some View {
-        Text("🥚")
-            .font(.title)
+        Image(player == .human ? .hero : .chickenLvl1)
+            .resizable()
+            .scaledToFit()
     }
 }
 
 // Анимация взрыва
 struct ExplosionView: View {
     var body: some View {
-        Text("💥")
-            .font(.largeTitle)
+        Image(.boom)
+            .resizable()
+            .scaledToFit()
     }
 }
 
 #Preview {
     GameView(levelId: 1, appState: AppState())
+}
+
+// MARK: - SettingsPanelView
+struct SettingsPanelView: View {
+    var body: some View {
+        HStack {
+            Button {
+                
+            } label: {
+                Image(.vibrobutton)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50)
+            }
+            
+            Button {
+                
+            } label: {
+                Image(.musicbutton)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50)
+            }
+            
+            Button {
+                
+            } label: {
+                Image(.soundbutton)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50)
+            }
+        }
+    }
 }
