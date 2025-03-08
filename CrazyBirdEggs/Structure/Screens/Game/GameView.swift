@@ -79,11 +79,10 @@ struct GameView: View {
                         )
                         
                         // MARK: Герой компьюетра
-                        Image(.lvl1)
+                        EnemyImageProvider.getEnemyImage(for: viewModel.currentLevel.id)
                             .resizable()
                             .scaledToFit()
-                            .frame(maxWidth: 80)
-                            // поворачиваем влево
+                            .frame(maxWidth: 70)
                             .scaleEffect(x: -1)
                     }
                     
@@ -415,9 +414,10 @@ struct ChickenView: View {
     let player: GamePlayer
     
     var body: some View {
-        Image(player == .human ? .hero : .lvl1)
+        Image(.hero)
             .resizable()
             .scaledToFit()
+            .scaleEffect(x: player == .human ? 1 : -1)
     }
 }
 

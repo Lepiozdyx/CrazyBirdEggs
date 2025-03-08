@@ -67,24 +67,34 @@ struct OrientationRestrictedView<Content: View>: View {
                 ZStack {
                     Color.black.opacity(0.4).ignoresSafeArea()
                     
-                    VStack(spacing: 20) {
-                        Text("Rotate the device")
-                            .font(.system(size: 32, weight: .bold, design: .default))
-                        
-                        Text(restrictionMessage)
-                            .font(.system(size: 20, weight: .regular, design: .default))
-                            .multilineTextAlignment(.center)
-                        
-                        Image(systemName: "rectangle.portrait.rotate")
-                            .font(.system(size: 40))
-                            .foregroundColor(.yellow)
-                    }
-                    .padding(30)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .foregroundStyle(.ultraThinMaterial)
-                            .shadow(radius: 10)
-                    )
+                    Image(.chickenBackground)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 450)
+                    
+                    Image(.table1)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 280)
+                        .offset(y: 50)
+                        .overlay {
+                            VStack(spacing: 10) {
+                                Text("Rotate the device")
+                                    .font(.system(size: 26, weight: .bold, design: .default))
+                                    .foregroundColor(.white)
+                                
+                                Text(restrictionMessage)
+                                    .font(.system(size: 20, weight: .regular, design: .default))
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.white)
+                                
+                                Image(systemName: "rectangle.portrait.rotate")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.yellow)
+                            }
+                            .padding()
+                            .offset(y: 50)
+                        }
                 }
             }
         }

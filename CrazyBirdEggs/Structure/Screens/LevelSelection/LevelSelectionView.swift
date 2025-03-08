@@ -84,13 +84,11 @@ struct LevelCell: View {
             .scaledToFit()
             .frame(maxWidth: 250)
             .overlay {
-                
-                // TODO: - add enemy image set
-                Image(.lvl1)
+                EnemyImageProvider.getEnemyImage(for: level)
                     .resizable()
                     .scaledToFit()
                     .frame(maxWidth: 90)
-                    .offset(y: -65)
+                    .offset(y: -55)
             }
             .overlay {
                 Image("\(level)")
