@@ -27,6 +27,7 @@ struct LevelSelectionView: View {
                 VStack {
                     HStack(alignment: .top) {
                         Button {
+                            SettingsManager.shared.getTapSound()
                             dismiss()
                         } label: {
                             Image(.backbutton)

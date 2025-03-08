@@ -21,6 +21,7 @@ struct GameView: View {
                     HStack {
                         // MARK: PauseOverlay
                         Button {
+                            SettingsManager.shared.getTapSound()
                             showPauseOverlay = true
                         } label: {
                             Image(.pausebutton)

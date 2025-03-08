@@ -7,7 +7,6 @@ struct PauseOverlayView: View {
     
     var body: some View {
         ZStack {
-            // Затемненный фон
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
             
@@ -22,12 +21,10 @@ struct PauseOverlayView: View {
                 .frame(maxWidth: 280)
                 .offset(y: 50)
             
-            // Контент
             VStack(spacing: 40) {
-                // Кнопки
                 VStack(spacing: 15) {
-                    // Вернуться в игру
                     Button {
+                        SettingsManager.shared.getTapSound()
                         isPresented = false
                     } label: {
                         Image(.resume)
@@ -36,8 +33,10 @@ struct PauseOverlayView: View {
                             .frame(maxWidth: 200)
                     }
                     
-                    // Выйти в меню
-                    Button(action: onBackToMenu) {
+                    Button {
+                        SettingsManager.shared.getTapSound()
+                        onBackToMenu()
+                    } label: {
                         Image(.menu)
                             .resizable()
                             .scaledToFit()
@@ -58,7 +57,6 @@ struct VictoryOverlayView: View {
     
     var body: some View {
         ZStack {
-            // Затемненный фон
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
             
@@ -97,9 +95,12 @@ struct VictoryOverlayView: View {
             VStack(spacing: 30) {
                 Spacer()
                 Spacer()
-                // Следующий уровень (если не последний)
+
                 if levelId < 10 {
-                    Button(action: onNextLevel) {
+                    Button {
+                        SettingsManager.shared.getTapSound()
+                        onNextLevel()
+                    } label: {
                         VStack {
                             Image(.quill)
                                 .resizable()
@@ -120,8 +121,10 @@ struct VictoryOverlayView: View {
                     }
                 }
                 
-                // Выйти в меню
-                Button(action: onBackToMenu) {
+                Button {
+                    SettingsManager.shared.getTapSound()
+                    onBackToMenu()
+                } label: {
                     Image(.menu)
                         .resizable()
                         .scaledToFit()
@@ -140,7 +143,6 @@ struct DefeatOverlayView: View {
     
     var body: some View {
         ZStack {
-            // Затемненный фон
             Color.black.opacity(0.6)
                 .ignoresSafeArea()
             
@@ -172,11 +174,13 @@ struct DefeatOverlayView: View {
             .opacity(0.7)
             .ignoresSafeArea()
             
-            // Контент
             VStack(spacing: 30) {
                 Spacer()
                 Spacer()
-                Button(action: onRestart) {
+                Button {
+                    SettingsManager.shared.getTapSound()
+                    onRestart()
+                } label: {
                     VStack(spacing: -10) {
                         Image(.friedChicken)
                             .resizable()
@@ -190,8 +194,10 @@ struct DefeatOverlayView: View {
                     }
                 }
                 
-                // Выйти в меню
-                Button(action: onBackToMenu) {
+                Button {
+                    SettingsManager.shared.getTapSound()
+                    onBackToMenu()
+                } label: {
                     Image(.menu)
                         .resizable()
                         .scaledToFit()
@@ -209,9 +215,7 @@ struct DefeatOverlayView: View {
         Color.gray
             .ignoresSafeArea()
         
-        PauseOverlayView(isPresented: .constant(true)) {
-            // Действие для возврата в меню
-        }
+        PauseOverlayView(isPresented: .constant(true)) {}
     }
 }
     

@@ -7,11 +7,11 @@ struct BoxView: View {
     let onTap: () -> Void
     
     var body: some View {
-        Button(action: onTap) {
+        Button {
+            SettingsManager.shared.getTapSound()
+            onTap()
+        } label: {
             ZStack {
-                // Удаляем все связанное с анимацией, так как это будет на уровне ряда
-                
-                // Отображение коробки в зависимости от состояния
                 if let imageName = box.boxImageName {
                     Image(imageName)
                         .resizable()
