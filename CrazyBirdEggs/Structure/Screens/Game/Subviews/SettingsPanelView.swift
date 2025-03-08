@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsPanelView: View {
     var body: some View {
-        HStack {
+        HStack(spacing: 15) {
             Button {
                 
             } label: {

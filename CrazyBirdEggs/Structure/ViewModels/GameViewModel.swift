@@ -1,5 +1,22 @@
 import Foundation
 
+enum AnimationDelay {
+    /// Задержка для хода ИИ после хода игрока
+    static let aiTurn: TimeInterval = 0.5
+    
+    /// Задержка для показа взрыва
+    static let explosion: TimeInterval = 0.6
+    
+    /// Задержка для показа цыпленка после взрыва
+    static let chickenReveal: TimeInterval = 0.8
+    
+    /// Задержка для возврата к следующему ходу
+    static let nextTurn: TimeInterval = 0.5
+    
+    /// Задержка для показа цыпленка в центральной арене
+    static let arenaChicken: TimeInterval = 0.8
+}
+
 class GameViewModel: ObservableObject {
     // MARK: - Published Properties
     
@@ -12,7 +29,7 @@ class GameViewModel: ObservableObject {
     @Published var currentTurn: GamePlayer = .human
     @Published var showVictoryOverlay: Bool = false
     @Published var showDefeatOverlay: Bool = false
-    @Published var gameMessage: String = "Select a box to place"
+    @Published var gameMessage: String = "Select a box"
     
     // Свойства для отслеживания состояний анимации
     @Published var arenaState: ArenaState = .empty
@@ -128,7 +145,7 @@ class GameViewModel: ObservableObject {
         placeHumanChicken(row: row, column: column)
         
         // Ход AI
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.aiTurn) { [weak self] in
             guard let self = self else { return }
             self.makeAIPlacementMove()
         }
@@ -223,7 +240,7 @@ class GameViewModel: ObservableObject {
         // 1. Анимация взрыва - показать взрыв на 0.5 секунды
         aiBoxes[targetRow][targetColumn].boxState = .explosion
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.explosion) { [weak self] in
             guard let self = self else { return }
             
             // Проверяем, содержит ли атакованная коробка цыпленка противника
@@ -234,7 +251,7 @@ class GameViewModel: ObservableObject {
                 self.aiBoxes[targetRow][targetColumn].boxState = .onlyChicken
                 self.gameMessage = "You hit!!"
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.chickenReveal) { [weak self] in
                     guard let self = self else { return }
                     
                     // 3. Сбрасываем состояние и возвращаем цыпленка на начальную позицию
@@ -244,7 +261,7 @@ class GameViewModel: ObservableObject {
                     self.resetAIDestroyedBoxes()
                     
                     // Ход AI для атаки
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.nextTurn) { [weak self] in
                         guard let self = self else { return }
                         self.makeAIAttackMove()
                     }
@@ -256,7 +273,7 @@ class GameViewModel: ObservableObject {
                 self.gameMessage = "Miss.."
                 
                 // Ход AI для атаки
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.nextTurn) { [weak self] in
                     guard let self = self else { return }
                     self.makeAIAttackMove()
                 }
@@ -304,7 +321,7 @@ class GameViewModel: ObservableObject {
         humanBoxes[targetRow][targetColumn].boxState = .explosion
         
         // Через задержку проверяем результат атаки
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.explosion) { [weak self] in
             guard let self = self else { return }
             
             // Проверяем, содержит ли атакованная коробка цыпленка игрока
@@ -315,7 +332,7 @@ class GameViewModel: ObservableObject {
                 self.humanBoxes[targetRow][targetColumn].boxState = .onlyChicken
                 self.gameMessage = "AI hit your chicken!"
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.chickenReveal) { [weak self] in
                     guard let self = self else { return }
                     
                     // 3. Сбрасываем состояние и возвращаем цыпленка на начальную позицию
@@ -325,7 +342,7 @@ class GameViewModel: ObservableObject {
                     self.resetHumanDestroyedBoxes()
                     
                     // Переходим к следующему ходу
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.nextTurn) { [weak self] in
                         guard let self = self else { return }
                         self.moveToNextTurn()
                     }
@@ -337,7 +354,7 @@ class GameViewModel: ObservableObject {
                 self.gameMessage = "AI miss.."
                 
                 // Переходим к следующему ходу
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.nextTurn) { [weak self] in
                     guard let self = self else { return }
                     self.moveToNextTurn()
                 }
@@ -467,7 +484,7 @@ class GameViewModel: ObservableObject {
         // Переходим к фазе размещения
         currentPhase = .placement
         currentTurn = .human
-        gameMessage = "Select a box to place"
+        gameMessage = "Select a box"
     }
     
     // Переход к следующему ходу
@@ -488,7 +505,7 @@ class GameViewModel: ObservableObject {
             // Переходим к фазе размещения для человека (сначала размещение, затем атака)
             currentPhase = .placement
             currentTurn = .human
-            gameMessage = "Select a box to place"
+            gameMessage = "Select a box"
             return
         }
         
@@ -506,7 +523,7 @@ class GameViewModel: ObservableObject {
             // Переходим к фазе размещения для человека
             currentPhase = .placement
             currentTurn = .human
-            gameMessage = "Select a box to place"
+            gameMessage = "Select a box"
             return
         }
         
@@ -531,7 +548,7 @@ class GameViewModel: ObservableObject {
         // Если оба были сбиты (маловероятный сценарий, но на всякий случай)
         currentPhase = .placement
         currentTurn = .human
-        gameMessage = "Select a box to place"
+        gameMessage = "Select a box"
     }
     
     // Перемещение только человеческого игрока на следующий ряд
@@ -578,7 +595,7 @@ class GameViewModel: ObservableObject {
         resetHumanDestroyedBoxes()
         resetAIDestroyedBoxes()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.arenaChicken) { [weak self] in
             guard let self = self else { return }
             
             // Скрываем цыпленка и показываем оверлей победы
@@ -602,7 +619,7 @@ class GameViewModel: ObservableObject {
         resetHumanDestroyedBoxes()
         resetAIDestroyedBoxes()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + AnimationDelay.arenaChicken) { [weak self] in
             guard let self = self else { return }
             
             // Скрываем цыпленка и показываем оверлей поражения
@@ -622,7 +639,7 @@ class GameViewModel: ObservableObject {
         showDefeatOverlay = false
         humanPlayer = PlayerModel(type: .human)
         aiPlayer = PlayerModel(type: .ai)
-        gameMessage = "Select a box to place"
+        gameMessage = "Select a box"
         arenaState = .empty
         showingCentralArenaChicken = false
         

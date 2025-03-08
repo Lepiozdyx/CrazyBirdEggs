@@ -84,6 +84,7 @@ struct GameView: View {
                             .scaledToFit()
                             .frame(maxWidth: 70)
                             .scaleEffect(x: -1)
+                            .offset(y: -25)
                     }
                     
                     Spacer()
