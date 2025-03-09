@@ -10,14 +10,15 @@ struct ShopButtonView: View {
     var body: some View {
         ZStack {
             Button {
+                SettingsManager.shared.getTapSound()
                 if !isBought {
                     buy()
-                } else {
+                } else if !isSelected {
                     select()
                 }
             } label: {
                 VStack(spacing: 10) {
-                    Text("\(skin.price)")
+                    Text(skin.price > 0 ? "\(skin.price)" : "Free")
                         .font(.system(size: 20, weight: .bold, design: .serif))
                         .shadow(color: .black, radius: 1, x: 1, y: 1)
                         .foregroundStyle(.yellow)
@@ -33,6 +34,7 @@ struct ShopButtonView: View {
                         .overlay {
                             RoundedRectangle(cornerRadius: 20)
                                 .stroke(isSelected ? .white : .clear, lineWidth: 8)
+                                .animation(.easeInOut, value: isSelected)
                         }
                     
                     Image(isSelected
@@ -48,11 +50,14 @@ struct ShopButtonView: View {
                             .foregroundStyle(isSelected
                                              ? .clear
                                              : isBought ? .lightGreen : .lightYellow
-                                            )
+                            )
+                            .animation(.easeInOut, value: isSelected)
+                            .animation(.easeInOut, value: isBought)
                     )
                 }
             }
             .buttonStyle(.plain)
+            .disabled(isSelected)
         }
     }
 }
@@ -64,6 +69,12 @@ struct ShopButtonView: View {
             .ignoresSafeArea()
             .blur(radius: 3, opaque: true)
         
-        ShopButtonView(skin: HeroSkin.init(id: 1, image: .hero2, price: 300), isBought: false, isSelected: false, buy: {}, select: {})
+        ShopButtonView(
+            skin: HeroSkin(id: 0, image: .hero2, price: 0),
+            isBought: false,
+            isSelected: false,
+            buy: {},
+            select: {}
+        )
     }
 }

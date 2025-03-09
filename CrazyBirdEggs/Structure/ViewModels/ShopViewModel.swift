@@ -11,18 +11,24 @@ final class ShopViewModel: ObservableObject {
     }
     
     let availableSkins: [HeroSkin] = [
-        HeroSkin(id: 1, image: .hero, price: 0),
-        HeroSkin(id: 2, image: .hero2, price: 300),
-        HeroSkin(id: 3, image: .hero3, price: 500),
-        HeroSkin(id: 4, image: .hero4, price: 1000)
+        HeroSkin(id: 0, image: .hero, price: 0),
+        HeroSkin(id: 1, image: .hero2, price: 300),
+        HeroSkin(id: 2, image: .hero3, price: 500),
+        HeroSkin(id: 3, image: .hero4, price: 1000)
     ]
     
     init() {
-        let bought = Set(UserDefaults.standard.array(forKey: "boughtSkin") as? [Int] ?? [0])
-        boughtSkin = bought.isEmpty ? [0] : bought
+        // Загружаем купленные скины или устанавливаем default (0) если ничего не сохранено
+        let bought = Set(UserDefaults.standard.array(forKey: "boughtSkin") as? [Int] ?? [])
         
+        // Всегда добавляем базовый скин (id = 0) как доступный по умолчанию
+        var initialBoughtSkins = bought
+        initialBoughtSkins.insert(0)
+        boughtSkin = initialBoughtSkins
+        
+        // Загружаем выбранный скин или используем 0 (базовый), если выбора нет или выбран недоступный
         let selected = UserDefaults.standard.integer(forKey: "selectedSkin")
-        if bought.contains(selected) {
+        if initialBoughtSkins.contains(selected) {
             selectedSkin = selected
         } else {
             selectedSkin = 0
