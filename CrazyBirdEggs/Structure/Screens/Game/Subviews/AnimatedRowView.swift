@@ -3,7 +3,10 @@ import SwiftUI
 struct AnimatedRowView<Content: View>: View {
     let isHighlighted: Bool
     let content: Content
+    
     @State private var pulseScale: CGFloat = 1.0
+    @State private var isAnimating: Bool = false
+    @State private var animationTask: Task<Void, Never>? = nil
     
     init(isHighlighted: Bool, @ViewBuilder content: () -> Content) {
         self.isHighlighted = isHighlighted
@@ -15,28 +18,61 @@ struct AnimatedRowView<Content: View>: View {
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isHighlighted ? .yellow.opacity(0.7) : .clear)
-                    .scaleEffect(isHighlighted ? pulseScale : 1.0)
-                    .animation(
-                        isHighlighted ?
-                            .easeInOut(duration: 0.5).repeatCount(5) :
-                            nil,
-                        value: pulseScale
-                    )
+                    .scaleEffect(pulseScale)
             )
-            .onAppear {
-                // Установить начальное значение анимации при появлении
-                if isHighlighted {
-                    pulseScale = 1.05
-                }
-            }
             .onChange(of: isHighlighted) { newValue in
-                // Сбросить значение при изменении подсветки
-                if !newValue {
-                    pulseScale = 1.0
+                animationTask?.cancel()
+                
+                if newValue {
+                    startPulseAnimation()
                 } else {
-                    // При активации подсветки установить значение для начала анимации
-                    pulseScale = 1.05
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        pulseScale = 1.0
+                    }
+                    isAnimating = false
                 }
             }
+            .onAppear {
+                if isHighlighted {
+                    startPulseAnimation()
+                }
+            }
+            .onDisappear {
+                animationTask?.cancel()
+                animationTask = nil
+                isAnimating = false
+            }
+    }
+    
+    private func startPulseAnimation() {
+        guard !isAnimating else { return }
+        isAnimating = true
+        
+        animationTask = Task {
+            for _ in 0..<4 {
+                if Task.isCancelled { break }
+                
+                await animatePulse(to: 1.05, duration: 0.3)
+                if Task.isCancelled { break }
+                
+                await animatePulse(to: 1.0, duration: 0.3)
+                if Task.isCancelled { break }
+            }
+            
+            if !Task.isCancelled {
+                await MainActor.run {
+                    isAnimating = false
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func animatePulse(to value: CGFloat, duration: Double) async {
+        withAnimation(.easeInOut(duration: duration)) {
+            pulseScale = value
+        }
+        
+        try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
     }
 }

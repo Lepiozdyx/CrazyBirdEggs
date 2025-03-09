@@ -5,7 +5,7 @@ class OrientationManager: ObservableObject {
     static let shared = OrientationManager()
     
     @Published var orientation: UIDeviceOrientation = UIDevice.current.orientation
-    @Published var isLandscape: Bool = UIDevice.current.orientation.isLandscape
+    @Published var isLandscape: Bool = false
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -15,10 +15,10 @@ class OrientationManager: ObservableObject {
         
         // Подписка на уведомления об изменении ориентации
         NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)
+            .debounce(for: .milliseconds(50), scheduler: RunLoop.main) // Добавляем задержку для избежания множественных вызовов
             .sink { [weak self] _ in
                 guard let self = self else { return }
-                self.orientation = UIDevice.current.orientation
-                self.isLandscape = UIDevice.current.orientation.isLandscape
+                self.updateOrientation()
             }
             .store(in: &cancellables)
             
@@ -31,18 +31,56 @@ class OrientationManager: ObservableObject {
     }
     
     func updateOrientation() {
+        // Сначала получаем текущее окно для более надежного определения ориентации
         let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene
+        
         if let interfaceOrientation = windowScene?.interfaceOrientation {
+            // Используем ориентацию интерфейса, которая более надежна для UI
             isLandscape = interfaceOrientation.isLandscape
+            
+            // Присваиваем соответствующее значение для ориентации устройства
+            // Это более согласованный подход
+            switch interfaceOrientation {
+            case .landscapeLeft:
+                orientation = .landscapeLeft
+            case .landscapeRight:
+                orientation = .landscapeRight
+            case .portrait:
+                orientation = .portrait
+            case .portraitUpsideDown:
+                orientation = .portraitUpsideDown
+            default:
+                // Для неизвестных случаев используем текущую ориентацию устройства
+                orientation = UIDevice.current.orientation
+            }
         } else {
-            isLandscape = UIDevice.current.orientation.isLandscape
+            // Запасной вариант, если windowScene недоступен
+            let deviceOrientation = UIDevice.current.orientation
+            
+            // Проверяем, что ориентация не неизвестна и не лицом вверх/вниз
+            if deviceOrientation.isValidInterfaceOrientation {
+                orientation = deviceOrientation
+                isLandscape = deviceOrientation.isLandscape
+            } else {
+                // Для некорректных ориентаций пытаемся найти активную сцену
+                let activeWindowScene = UIApplication.shared.connectedScenes
+                    .filter { $0.activationState == .foregroundActive }
+                    .first as? UIWindowScene
+                
+                let statusBarOrientation = activeWindowScene?.interfaceOrientation
+                isLandscape = statusBarOrientation?.isLandscape ?? false
+            }
+        }
+        
+        // Вызываем обновление для уведомления подписчиков
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
         }
     }
 }
 
 struct OrientationRestrictedView<Content: View>: View {
-    @StateObject private var orientationManager = OrientationManager.shared
-    @State private var showAlert = false
+    @ObservedObject private var orientationManager = OrientationManager.shared
     
     let requiredOrientation: UIInterfaceOrientationMask
     let content: Content
@@ -101,15 +139,20 @@ struct OrientationRestrictedView<Content: View>: View {
         .onAppear {
             orientationManager.updateOrientation()
         }
+        .onChange(of: orientationManager.isLandscape) { _ in
+            // Перепроверяем при каждом изменении ориентации
+            orientationManager.updateOrientation()
+        }
     }
     
     private var isOrientationValid: Bool {
         switch requiredOrientation {
-        case .landscape:
+        case .landscape, .landscapeLeft, .landscapeRight:
             return orientationManager.isLandscape
-        case .portrait:
+        case .portrait, .portraitUpsideDown:
             return !orientationManager.isLandscape
         default:
+            // Для случаев когда маска содержит и landscape и portrait (.all, .allButUpsideDown)
             return true
         }
     }

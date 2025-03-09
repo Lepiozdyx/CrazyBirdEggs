@@ -20,19 +20,6 @@ struct MainMenuView: View {
                             SettingsPanelView()
                             Spacer()
                             
-                            #if DEBUG
-                            Button {
-                                appState.resetProgress()
-                            } label: {
-                                Text("Reset all")
-                                    .font(.title3)
-                                    .padding(4)
-                                    .background(.red)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(8)
-                            }
-                            #endif
-                            
                             Image(.counterFrame)
                                 .resizable()
                                 .scaledToFit()
@@ -53,7 +40,6 @@ struct MainMenuView: View {
                         HStack {
                             Spacer()
                             SpinReelView(appState: appState)
-//                                .background()
                         }
                         
                         Spacer()
