@@ -24,18 +24,32 @@ final class SettingsManager: ObservableObject {
         }
     }
     
+    @Published var isVibrationOn: Bool {
+        didSet {
+            defaults.set(isVibrationOn, forKey: "vibrationOn")
+        }
+    }
+    
     private let defaults = UserDefaults.standard
     private var audioPlayer: AVAudioPlayer?
     private var tapPlayer: AVAudioPlayer?
+    private var feedbackGenerator: UIImpactFeedbackGenerator?
+    private let appID: String
+    private let appStoreURL: URL
     
     private init() {
         self.isMusicOn = defaults.bool(forKey: "musicOn")
         self.isSoundOn = defaults.bool(forKey: "soundOn")
+        self.isVibrationOn = defaults.bool(forKey: "vibrationOn")
+        #warning("appID")
+        self.appID = ""
+        self.appStoreURL = URL(string: "https://apps.apple.com/app/id\(appID)")!
         
         setupDefaultSettings()
         setupAudioSession()
         prepareBackgroundMusic()
         prepareTapSound()
+        prepareFeedbackGenerator()
     }
     
     func toggleSound() {
@@ -66,6 +80,55 @@ final class SettingsManager: ObservableObject {
         audioPlayer?.pause()
     }
     
+    // MARK: - Vibration methods
+    
+    func toggleVibration() {
+        isVibrationOn.toggle()
+    }
+    
+    func getVibration(style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+        guard isVibrationOn else { return }
+        
+        let generator = UIImpactFeedbackGenerator(style: style)
+        generator.prepare()
+        generator.impactOccurred()
+    }
+    
+    func getHeavyVibration() {
+        getVibration(style: .heavy)
+    }
+    
+    func getLightVibration() {
+        getVibration(style: .light)
+    }
+    
+    func getSuccessVibration() {
+        guard isVibrationOn else { return }
+        
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.success)
+    }
+    
+    func getErrorVibration() {
+        guard isVibrationOn else { return }
+        
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.error)
+    }
+    
+    // MARK: - Rate method
+    func rateApp() {
+        let appStoreURL = "itms-apps://apps.apple.com/app/id\(appID)"
+        if let url = URL(string: appStoreURL),
+           UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else {
+            UIApplication.shared.open(self.appStoreURL)
+        }
+    }
+    
     // MARK: - Private methods
     private func setupDefaultSettings() {
         if defaults.object(forKey: "soundOn") == nil {
@@ -76,6 +139,11 @@ final class SettingsManager: ObservableObject {
         if defaults.object(forKey: "musicOn") == nil {
             defaults.set(true, forKey: "musicOn")
             isMusicOn = true
+        }
+        
+        if defaults.object(forKey: "vibrationOn") == nil {
+            defaults.set(true, forKey: "vibrationOn")
+            isVibrationOn = true
         }
     }
     
@@ -114,5 +182,10 @@ final class SettingsManager: ObservableObject {
         } catch {
             print(error.localizedDescription)
         }
+    }
+    
+    private func prepareFeedbackGenerator() {
+        feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+        feedbackGenerator?.prepare()
     }
 }

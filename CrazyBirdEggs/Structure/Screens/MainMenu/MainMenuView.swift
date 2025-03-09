@@ -1,125 +1,109 @@
 import SwiftUI
 
 struct MainMenuView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var appState = AppState()
+    @StateObject private var settings = SettingsManager.shared
     
     var body: some View {
         NavigationView {
-            ZStack {
-                Image(.background2)
-                    .resizable()
-                    .ignoresSafeArea()
-                
-                VStack {
+            OrientationRestrictedView(requiredOrientation: .landscape, restrictionMessage: "Use landscape orientation for better experience") {
+                ZStack {
+                    Image(.background2)
+                        .resizable()
+                        .ignoresSafeArea()
                     
-                    
-                    #if DEBUG
-                    Button {
-                        appState.resetProgress()
-                    } label: {
-                        Text("Сбросить прогресс")
-                            .font(.footnote)
-                            .foregroundColor(.red)
+                    VStack {
+                        // MARK: Top panel
+                        HStack {
+                            // MARK: Settings panel
+                            SettingsPanelView()
+                            Spacer()
+                            
+                            #if DEBUG
+                            Button {
+                                appState.resetProgress()
+                            } label: {
+                                Text("Reset all")
+                                    .font(.title3)
+                                    .foregroundColor(.red)
+                                    .background()
+                            }
+                            #endif
+                            
+                            Image(.counterFrame)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 150)
+                                .overlay {
+                                    Text("\(appState.totalScore)")
+                                        .font(.system(size: 18, weight: .bold, design: .serif))
+                                        .shadow(color: .black, radius: 1, x: 1, y: 1)
+                                        .foregroundStyle(.yellow)
+                                        .offset(x: 10, y: 8)
+                                }
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Spacer()
+                            SpinReelView(appState: appState)
+//                                .background()
+                        }
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 10) {
+                            NavigationLink {
+                                LevelSelectionView(appState: appState)
+                            } label: {
+                                ActionView(button: .button, text: .start)
+                            }
+                            
+                            NavigationLink {
+                                ShopView(appState: appState)
+                            } label: {
+                                ActionView(button: .button, text: .shop)
+                            }
+                            
+                            NavigationLink {
+                                 RulesView()
+                            } label: {
+                                ActionView(button: .button, text: .rules)
+                            }
+                            
+                            Button {
+                                settings.rateApp()
+                            } label: {
+                                ActionView(button: .buttonRed, text: .rateUs)
+                            }
+                        }
                     }
-                    .padding(.top, 20)
-                    #endif
-                    
-                    Spacer()
                 }
-                .padding()
+                .navigationBarHidden(true)
+                .onAppear {}
             }
-            .navigationBarHidden(true)
-            .onAppear {}
         }
         .navigationViewStyle(.stack)
+        .onAppear {
+            settings.playBackgroundMusic()
+        }
+        .onChange(of: scenePhase) { newPhase in
+            switch newPhase {
+            case .active:
+                settings.playBackgroundMusic()
+            case .background, .inactive:
+                settings.stopBackgroundMusic()
+            @unknown default:
+                break
+            }
+        }
     }
 }
-
 
 #Preview {
     MainMenuView()
 }
-
-//struct MainMenuView: View {
-//    @StateObject private var appState = AppState()
-//
-//    var body: some View {
-//        NavigationView {
-//            ZStack {
-//                // Фон
-//                Color.gray.opacity(0.2).ignoresSafeArea()
-//
-//                VStack {
-//                    Spacer()
-//
-//                    // Информация о прогрессе
-//                    VStack(alignment: .center, spacing: 10) {
-//                        Text("Разблокировано уровней: \(appState.unlockedLevels)/10")
-//                            .font(.headline)
-//
-//                        Text("Общий счёт: \(appState.totalScore)")
-//                            .font(.headline)
-//                    }
-//                    .padding()
-//                    .background(
-//                        RoundedRectangle(cornerRadius: 10)
-//                            .fill(Color.white)
-//                            .shadow(radius: 2)
-//                    )
-//
-//                    Spacer()
-//
-//                    // Кнопка "Играть"
-//                    NavigationLink(destination: LevelSelectionView(appState: appState)) {
-//                        Text("Играть")
-//                            .font(.title)
-//                            .fontWeight(.semibold)
-//                            .foregroundColor(.white)
-//                            .frame(width: 200, height: 60)
-//                            .background(Color.blue)
-//                            .cornerRadius(15)
-//                            .shadow(radius: 3)
-//                    }
-//
-//                    // Для отладки: кнопка сброса прогресса
-//                    #if DEBUG
-//                    Button {
-//                        appState.resetProgress()
-//                    } label: {
-//                        Text("Сбросить прогресс")
-//                            .font(.footnote)
-//                            .foregroundColor(.red)
-//                    }
-//                    .padding(.top, 20)
-//                    #endif
-//
-//                    Spacer()
-//                }
-//                .padding()
-//            }
-//            .navigationBarHidden(true)
-//            .onAppear {
-//                if UIDevice.current.orientation.isPortrait {
-//                    showOrientationWarning()
-//                }
-//            }
-//        }
-//        .navigationViewStyle(.stack)
-//    }
-//
-//    // Функция для отображения предупреждения об ориентации
-//    private func showOrientationWarning() {
-//        let alertController = UIAlertController(
-//            title: "Внимание",
-//            message: "Игра предназначена для горизонтальной ориентации. Пожалуйста, поверните устройство.",
-//            preferredStyle: .alert
-//        )
-//
-//        alertController.addAction(UIAlertAction(title: "OK", style: .default))
-//
-//        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-//           let rootViewController = windowScene.windows.first?.rootViewController {
-//            rootViewController.present(alertController, animated: true)
-//        }
-//    }
-//}

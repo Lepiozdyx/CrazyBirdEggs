@@ -13,6 +13,12 @@ class AppState: ObservableObject {
         loadProgress()
     }
     
+    func spend(_ amount: Int) -> Bool {
+        guard totalScore >= amount else { return false }
+        totalScore -= amount
+        return true
+    }
+    
     // Отметить уровень как пройденный и разблокировать следующий
     func completeLevel(levelId: Int) {
         // Добавляем уровень в список пройденных

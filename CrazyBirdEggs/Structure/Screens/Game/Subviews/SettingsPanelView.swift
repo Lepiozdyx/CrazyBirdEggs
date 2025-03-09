@@ -5,18 +5,20 @@ struct SettingsPanelView: View {
     
     var body: some View {
         HStack(spacing: 15) {
-//            Button {
-//                withAnimation {
-//                    
-//                }
-//            } label: {
-//                Image(isOn ? .vibrobutton : .xvibrobutton)
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(width: 50)
-//            }
+            Button {
+                settings.getTapSound()
+                withAnimation {
+                    settings.toggleVibration()
+                }
+            } label: {
+                Image(settings.isVibrationOn ? .vibrobutton : .xvibrobutton)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 50)
+            }
             
             Button {
+                settings.getTapSound()
                 withAnimation {
                     settings.toggleMusic()
                 }
@@ -28,6 +30,7 @@ struct SettingsPanelView: View {
             }
             
             Button {
+                settings.getTapSound()
                 withAnimation {
                     settings.toggleSound()
                 }

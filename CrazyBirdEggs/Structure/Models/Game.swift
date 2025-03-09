@@ -115,3 +115,10 @@ struct LevelModel: Identifiable {
         return LevelModel(id: id, aiActions: aiActions)
     }
 }
+
+// MARK: Player skin model
+struct HeroSkin: Identifiable {
+    let id: Int
+    let image: ImageResource
+    let price: Int
+}

@@ -9,6 +9,7 @@ struct BoxView: View {
     var body: some View {
         Button {
             SettingsManager.shared.getTapSound()
+            SettingsManager.shared.getVibration()
             onTap()
         } label: {
             ZStack {
