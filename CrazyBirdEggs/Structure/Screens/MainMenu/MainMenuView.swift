@@ -26,8 +26,10 @@ struct MainMenuView: View {
                             } label: {
                                 Text("Reset all")
                                     .font(.title3)
-                                    .foregroundColor(.red)
-                                    .background()
+                                    .padding(4)
+                                    .background(.red)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
                             }
                             #endif
                             

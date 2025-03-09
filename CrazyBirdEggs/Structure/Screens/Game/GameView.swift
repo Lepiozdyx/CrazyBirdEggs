@@ -2,11 +2,13 @@ import SwiftUI
 
 struct GameView: View {
     @StateObject var viewModel: GameViewModel
+    @ObservedObject private var shopViewModel: ShopViewModel
     @Environment(\.dismiss) var dismiss
     @State private var showPauseOverlay: Bool = false
     
     init(levelId: Int, appState: AppState) {
         _viewModel = StateObject(wrappedValue: GameViewModel(levelId: levelId, appState: appState))
+        _shopViewModel = ObservedObject(wrappedValue: ShopViewModel())
     }
     
     var body: some View {
@@ -59,7 +61,7 @@ struct GameView: View {
                     // MARK: Game field
                     HStack(spacing: 10) {
                         // MARK: Hero Image
-                        Image(.hero)
+                        Image(shopViewModel.currentSkin.image)
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: 60)
