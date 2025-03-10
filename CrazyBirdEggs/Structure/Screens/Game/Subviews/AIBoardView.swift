@@ -6,7 +6,6 @@ struct AIBoardView: View {
     
     var body: some View {
         HStack(spacing: 10) {
-            // Ряд 3 (2 коробки)
             AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 3)) {
                 VStack(spacing: 10) {
                     ForEach(0..<2) { colIndex in
@@ -23,7 +22,6 @@ struct AIBoardView: View {
                 }
             }
             
-            // Ряд 2 (3 коробки)
             AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 2)) {
                 VStack(spacing: 10) {
                     ForEach(0..<3) { colIndex in
@@ -40,7 +38,6 @@ struct AIBoardView: View {
                 }
             }
             
-            // Ряд 1 (4 коробки)
             AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 1)) {
                 VStack(spacing: 10) {
                     ForEach(0..<4) { colIndex in
@@ -57,7 +54,6 @@ struct AIBoardView: View {
                 }
             }
             
-            // Ряд 0 (5 коробок)
             AnimatedRowView(isHighlighted: viewModel.shouldHighlightAIRow(row: 0)) {
                 VStack(spacing: 10) {
                     ForEach(0..<5) { colIndex in
@@ -76,7 +72,6 @@ struct AIBoardView: View {
         }
     }
     
-    // Определяет размер коробки в зависимости от количества коробок в ряду
     private func boxSize(rowCount: Int) -> CGFloat {
         let baseSize = min(geometry.size.width / 10, geometry.size.height / 10)
         return baseSize

@@ -53,13 +53,12 @@ struct BoxModel: Identifiable, Equatable {
         case .explosion:
             return .boom
         case .onlyChicken:
-            return nil  // Не показываем коробку, только цыпленок
+            return nil
         case .destroyed:
-            return nil  // Коробка уничтожена, ничего не показываем
+            return nil
         }
     }
     
-    // Определяет, нужно ли показывать цыпленка
     var shouldShowChicken: Bool {
         return containsPlayer != nil && boxState == .onlyChicken
     }
@@ -90,18 +89,13 @@ struct LevelModel: Identifiable {
         let attackColumn: Int
     }
     
-    // Генерирует случайные действия ИИ для уровня
     static func generateLevel(id: Int) -> LevelModel {
-        // Количество рядов (0 - первый ряд из 5 коробок, 4 - центральная арена)
         let rowCount = 5
         var aiActions: [AIAction] = []
         
-        // Создаем действия для каждого ряда
         for row in 0..<rowCount {
             let maxColumns = 5 - row
-            // Случайный выбор колонки для размещения
             let placementColumn = Int.random(in: 0..<maxColumns)
-            // Случайный выбор колонки для атаки
             let attackColumn = Int.random(in: 0..<maxColumns)
             
             aiActions.append(

@@ -33,23 +33,27 @@ final class SettingsManager: ObservableObject {
     private let defaults = UserDefaults.standard
     private var audioPlayer: AVAudioPlayer?
     private var tapPlayer: AVAudioPlayer?
-    private var feedbackGenerator: UIImpactFeedbackGenerator?
+    private var mediumFeedbackGenerator: UIImpactFeedbackGenerator?
+    private var lightFeedbackGenerator: UIImpactFeedbackGenerator?
+    private var heavyFeedbackGenerator: UIImpactFeedbackGenerator?
+    private var notificationFeedbackGenerator: UINotificationFeedbackGenerator?
     private let appID: String
     private let appStoreURL: URL
+    private var isVibrationSupported: Bool
     
     private init() {
         self.isMusicOn = defaults.bool(forKey: "musicOn")
         self.isSoundOn = defaults.bool(forKey: "soundOn")
         self.isVibrationOn = defaults.bool(forKey: "vibrationOn")
-        #warning("appID")
-        self.appID = ""
+        self.appID = "6743075101"
         self.appStoreURL = URL(string: "https://apps.apple.com/app/id\(appID)")!
+        self.isVibrationSupported = UIDevice.current.hasHapticFeedback
         
         setupDefaultSettings()
         setupAudioSession()
         prepareBackgroundMusic()
         prepareTapSound()
-        prepareFeedbackGenerator()
+        prepareFeedbackGenerators()
     }
     
     func toggleSound() {
@@ -87,35 +91,52 @@ final class SettingsManager: ObservableObject {
     }
     
     func getVibration(style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
-        guard isVibrationOn else { return }
+        guard isVibrationOn, isVibrationSupported else { return }
         
-        let generator = UIImpactFeedbackGenerator(style: style)
-        generator.prepare()
-        generator.impactOccurred()
+        switch style {
+        case .light:
+            lightFeedbackGenerator?.impactOccurred()
+            lightFeedbackGenerator?.prepare()
+        case .medium:
+            mediumFeedbackGenerator?.impactOccurred()
+            mediumFeedbackGenerator?.prepare()
+        case .heavy:
+            heavyFeedbackGenerator?.impactOccurred()
+            heavyFeedbackGenerator?.prepare()
+        default:
+            mediumFeedbackGenerator?.impactOccurred()
+            mediumFeedbackGenerator?.prepare()
+        }
     }
     
     func getHeavyVibration() {
-        getVibration(style: .heavy)
+        guard isVibrationOn, isVibrationSupported else { return }
+        heavyFeedbackGenerator?.impactOccurred()
+        heavyFeedbackGenerator?.prepare()
     }
     
     func getLightVibration() {
-        getVibration(style: .light)
+        guard isVibrationOn, isVibrationSupported else { return }
+        lightFeedbackGenerator?.impactOccurred()
+        lightFeedbackGenerator?.prepare()
     }
     
     func getSuccessVibration() {
-        guard isVibrationOn else { return }
-        
-        let generator = UINotificationFeedbackGenerator()
-        generator.prepare()
-        generator.notificationOccurred(.success)
+        guard isVibrationOn, isVibrationSupported else { return }
+        notificationFeedbackGenerator?.notificationOccurred(.success)
+        notificationFeedbackGenerator?.prepare()
     }
     
     func getErrorVibration() {
-        guard isVibrationOn else { return }
-        
-        let generator = UINotificationFeedbackGenerator()
-        generator.prepare()
-        generator.notificationOccurred(.error)
+        guard isVibrationOn, isVibrationSupported else { return }
+        notificationFeedbackGenerator?.notificationOccurred(.error)
+        notificationFeedbackGenerator?.prepare()
+    }
+    
+    func getWarningVibration() {
+        guard isVibrationOn, isVibrationSupported else { return }
+        notificationFeedbackGenerator?.notificationOccurred(.warning)
+        notificationFeedbackGenerator?.prepare()
     }
     
     // MARK: - Rate method
@@ -184,8 +205,31 @@ final class SettingsManager: ObservableObject {
         }
     }
     
-    private func prepareFeedbackGenerator() {
-        feedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
-        feedbackGenerator?.prepare()
+    private func prepareFeedbackGenerators() {
+        guard isVibrationSupported else { return }
+        
+        mediumFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
+        mediumFeedbackGenerator?.prepare()
+        
+        lightFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+        lightFeedbackGenerator?.prepare()
+        
+        heavyFeedbackGenerator = UIImpactFeedbackGenerator(style: .heavy)
+        heavyFeedbackGenerator?.prepare()
+        
+        notificationFeedbackGenerator = UINotificationFeedbackGenerator()
+        notificationFeedbackGenerator?.prepare()
+    }
+}
+
+// MARK: - UIDevice Extension
+extension UIDevice {
+    var hasHapticFeedback: Bool {
+        if #available(iOS 16.0, *) {
+            return true
+        } else {
+            let deviceType = UIDevice.current.model
+            return deviceType.hasPrefix("iPhone") && !["iPhone1,", "iPhone2,", "iPhone3,", "iPhone4,", "iPhone5,", "iPhone6,", "iPhone8,"].contains(where: { deviceType.contains($0) })
+        }
     }
 }

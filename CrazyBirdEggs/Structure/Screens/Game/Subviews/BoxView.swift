@@ -9,7 +9,13 @@ struct BoxView: View {
     var body: some View {
         Button {
             SettingsManager.shared.getTapSound()
-            SettingsManager.shared.getVibration()
+            
+            if box.isDestroyed || box.boxState == .explosion || box.boxState == .onlyChicken {
+                SettingsManager.shared.getWarningVibration()
+            } else {
+                SettingsManager.shared.getVibration(style: .medium)
+            }
+            
             onTap()
         } label: {
             ZStack {
@@ -19,7 +25,6 @@ struct BoxView: View {
                         .scaledToFit()
                 }
                 
-                // Показываем цыпленка только если нужно
                 if box.shouldShowChicken && box.containsPlayer != nil {
                     ChickenView(player: box.containsPlayer!)
                 }

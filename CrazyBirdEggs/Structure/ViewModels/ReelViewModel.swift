@@ -71,11 +71,8 @@ final class ReelViewModel: ObservableObject {
                         onComplete(self.rewardPoints)
                         
                         self.isSpinning = false
-                        
-                        // Активируем блокировку на 24 часа
                         self.activateLock()
                         
-                        // Показываем замок через 5 секунд после отображения награды
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                             withAnimation {
                                 self.showLockOverlay = true
@@ -87,17 +84,14 @@ final class ReelViewModel: ObservableObject {
         }
     }
     
-    // Активация 24-часовой блокировки
     private func activateLock() {
         #if DEBUG
-        // В режиме отладки можно пропустить блокировку
         if debugDisableLock {
             isLocked = false
             return
         }
         #endif
         
-        // Сохраняем время последнего вращения
         let now = Date()
         UserDefaults.standard.set(now.timeIntervalSince1970, forKey: userDefaultsLastSpinKey)
         
@@ -105,19 +99,15 @@ final class ReelViewModel: ObservableObject {
         startLockTimer()
     }
     
-    // Запуск таймера для отсчета блокировки
     private func startLockTimer() {
-        // Обновляем оставшееся время сразу
         updateRemainingTime()
         
-        // Запускаем таймер, который будет обновлять отображение каждый час
         lockTimer?.invalidate()
         lockTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
             self?.updateRemainingTime()
         }
     }
     
-    // Обновление оставшегося времени блокировки
     private func updateRemainingTime() {
         #if DEBUG
         if debugDisableLock {
@@ -136,35 +126,28 @@ final class ReelViewModel: ObservableObject {
         let lastSpinDate = Date(timeIntervalSince1970: lastSpinTimestamp)
         let now = Date()
         
-        // Вычисляем время, прошедшее с момента последнего вращения
         let timeElapsed = now.timeIntervalSince(lastSpinDate)
-        let totalLockTime: TimeInterval = 24 * 3600 // 24 часа в секундах
+        let totalLockTime: TimeInterval = 24 * 3600
         
         if timeElapsed >= totalLockTime {
-            // Если прошло 24 часа, снимаем блокировку
             isLocked = false
             showLockOverlay = false
             lockTimer?.invalidate()
             lockTimer = nil
         } else {
-            // Иначе обновляем оставшееся время
             let timeRemaining = totalLockTime - timeElapsed
-            hoursRemaining = Int(ceil(timeRemaining / 3600)) // Округляем вверх до часа
+            hoursRemaining = Int(ceil(timeRemaining / 3600))
             
-            // Фиксируем статус блокировки
             isLocked = true
         }
         
-        // Вызываем обновление UI в главном потоке
         DispatchQueue.main.async {
             self.objectWillChange.send()
         }
     }
     
-    // Проверка статуса блокировки при запуске/появлении вью
     func checkLockStatus() {
         #if DEBUG
-        // В режиме отладки можно пропустить проверку блокировки
         if debugDisableLock {
             isLocked = false
             showLockOverlay = false
@@ -182,30 +165,27 @@ final class ReelViewModel: ObservableObject {
         let now = Date()
         let timeElapsed = now.timeIntervalSince(lastSpinDate)
         
-        if timeElapsed < 24 * 3600 { // Меньше 24 часов
+        if timeElapsed < 24 * 3600 {
             isLocked = true
             showLockOverlay = true
             startLockTimer()
         } else {
-            // Прошло больше 24 часов, снимаем блокировку
             isLocked = false
             showLockOverlay = false
         }
     }
     
     #if DEBUG
-    // Метод для сброса блокировки в режиме отладки
     func resetLockForDebug() {
         isLocked = false
         showLockOverlay = false
         UserDefaults.standard.removeObject(forKey: userDefaultsLastSpinKey)
     }
     
-    // Метод для установки таймера на конкретное значение (для тестирования)
     func setDebugTimer(hours: Int) {
         let now = Date()
-        let timeToSubtract = TimeInterval((24 - hours) * 3600) // Время, которое нужно "отнять"
-        let fakeSpinTime = now.addingTimeInterval(-timeToSubtract) // Время в прошлом
+        let timeToSubtract = TimeInterval((24 - hours) * 3600)
+        let fakeSpinTime = now.addingTimeInterval(-timeToSubtract)
         
         UserDefaults.standard.set(fakeSpinTime.timeIntervalSince1970, forKey: userDefaultsLastSpinKey)
         
@@ -218,7 +198,6 @@ final class ReelViewModel: ObservableObject {
     }
     #endif
     
-    // При уничтожении объекта останавливаем таймеры
     deinit {
         spinTimer?.invalidate()
         lockTimer?.invalidate()
