@@ -90,6 +90,19 @@ struct LevelCell: View {
                     .scaledToFit()
                     .frame(maxWidth: 90)
                     .offset(y: -55)
+                    .overlay(alignment: .top) {
+                        HStack {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 18))
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 18))
+                                .offset(y: -5)
+                            Image(systemName: "star")
+                                .font(.system(size: 18))
+                        }
+                        .foregroundStyle(isUnlocked ? .yellow : .clear)
+                        .offset(y: -75)
+                    }
             }
             .overlay {
                 Image("\(level)")
